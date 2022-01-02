@@ -13,21 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* (C)2015 */
 package io.fabric8.java.generator.nodes;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
-public class JArray extends AbstractJSONSchema2Pojo {
+public class JMap extends AbstractJSONSchema2Pojo {
 
     private String type = null;
     private AbstractJSONSchema2Pojo nested = null;
 
-    public JArray(AbstractJSONSchema2Pojo nested) {
+    public JMap(AbstractJSONSchema2Pojo nested) {
         this.type =
                 new ClassOrInterfaceType()
-                        .setName("java.util.List")
+                        .setName("java.util.Map")
                         .setTypeArguments(
+                                new ClassOrInterfaceType().setName("java.lang.String"),
                                 new ClassOrInterfaceType()
                                         .setName(
                                                 AbstractJSONSchema2Pojo.sanitizeString(

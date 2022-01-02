@@ -83,4 +83,26 @@ public class ApprovalTest {
 
         Approvals.verifyAll("KeycloakJavaCr", underTest);
     }
+
+    @Test
+    void testJokeCrd() {
+        // Arrange
+        CustomResourceDefinition crd = getCRD("jokerequests-crd.yml");
+
+        // Act
+        List<WritableCRCompilationUnit> writables = runner.generate(crd, Optional.empty());
+
+        // Assert
+        assertEquals(1, writables.size());
+        assertThat(writables.size()).isEqualTo(1);
+
+        WritableCRCompilationUnit writable = writables.get(0);
+
+        List<String> underTest = new ArrayList<>();
+        underTest.add(writable.getJavaClass("JokeRequest"));
+        underTest.add(writable.getJavaClass("JokeRequestSpec"));
+        underTest.add(writable.getJavaClass("JokeRequestStatus"));
+
+        Approvals.verifyAll("JokeRequestJavaCr", underTest);
+    }
 }

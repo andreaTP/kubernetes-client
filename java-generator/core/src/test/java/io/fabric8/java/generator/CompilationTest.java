@@ -91,7 +91,7 @@ public class CompilationTest {
 
         // Assert
         assertTrue(compilation.errors().isEmpty());
-        assertEquals(34, compilation.sourceFiles().size());
+        assertEquals(32, compilation.sourceFiles().size());
         assertEquals(Compilation.Status.SUCCESS, compilation.status());
     }
 
@@ -123,7 +123,7 @@ public class CompilationTest {
 
         // Assert
         assertTrue(compilation.errors().isEmpty());
-        assertEquals(110, compilation.sourceFiles().size());
+        assertEquals(74, compilation.sourceFiles().size());
         assertEquals(Compilation.Status.SUCCESS, compilation.status());
     }
 
@@ -139,7 +139,7 @@ public class CompilationTest {
 
         // Assert
         assertTrue(compilation.errors().isEmpty());
-        assertEquals(99, compilation.sourceFiles().size());
+        assertEquals(97, compilation.sourceFiles().size());
         assertEquals(Compilation.Status.SUCCESS, compilation.status());
     }
 
@@ -155,7 +155,7 @@ public class CompilationTest {
 
         // Assert
         assertTrue(compilation.errors().isEmpty());
-        assertEquals(82, compilation.sourceFiles().size());
+        assertEquals(74, compilation.sourceFiles().size());
         assertEquals(Compilation.Status.SUCCESS, compilation.status());
     }
 
@@ -172,6 +172,22 @@ public class CompilationTest {
         // Assert
         assertTrue(compilation.errors().isEmpty());
         assertEquals(15, compilation.sourceFiles().size());
+        assertEquals(Compilation.Status.SUCCESS, compilation.status());
+    }
+
+    @Test
+    void testJokeRequestsCRDCompiles() throws Exception {
+        // Arrange
+        File crd = getCRD("jokerequests-crd.yml");
+        File dest = tmpFolder.newFolder("jokes");
+
+        // Act
+        runner.run(crd, dest);
+        Compilation compilation = javac().compile(getSources(dest));
+
+        // Assert
+        assertTrue(compilation.errors().isEmpty());
+        assertEquals(3, compilation.sourceFiles().size());
         assertEquals(Compilation.Status.SUCCESS, compilation.status());
     }
 

@@ -19,13 +19,12 @@ import static io.fabric8.java.generator.nodes.Keywords.JAVA_KEYWORDS;
 
 import com.github.javaparser.ast.CompilationUnit;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
-import java.util.List;
 
 public abstract class AbstractJSONSchema2Pojo {
 
     public abstract String getType();
 
-    public abstract List<String> generateJava(CompilationUnit cu);
+    public abstract GeneratorResult generateJava(CompilationUnit cu);
 
     public static String sanitizeString(String str) {
         String sanitized = "";
@@ -65,6 +64,8 @@ public abstract class AbstractJSONSchema2Pojo {
                 && prop.getXKubernetesPreserveUnknownFields() != null
                 && prop.getXKubernetesPreserveUnknownFields()) {
             return fromJsonSchema(key, new JObjectNameAndType(key), prop, prefix, suffix);
+        } else if (prop.getEnum() != null && prop.getEnum().size() > 0) {
+            return fromJsonSchema(key, new JEnumNameAndType(key), prop, prefix, suffix);
         } else {
             if (prop.getType() == null) {
                 throw new RuntimeException("Type for key:" + key + " is null");
@@ -108,11 +109,9 @@ public abstract class AbstractJSONSchema2Pojo {
                     return fromJsonSchema(
                             key, new JPrimitiveNameAndType("String"), prop, prefix, suffix);
                 case "object":
-                    // Taking the schema defined in AdditionalProperties instead
                     if (prop.getAdditionalProperties() != null
                             && prop.getAdditionalProperties().getSchema() != null) {
-                        return fromJsonSchema(
-                                key, prop.getAdditionalProperties().getSchema(), prefix, suffix);
+                        return fromJsonSchema(key, new JMapNameAndType(key), prop, prefix, suffix);
                     } else {
                         return fromJsonSchema(
                                 key, new JObjectNameAndType(key), prop, prefix, suffix);
@@ -132,21 +131,21 @@ public abstract class AbstractJSONSchema2Pojo {
                 return new JPrimitive(nt.getName());
             case ARRAY:
                 return new JArray(fromJsonSchema(key, prop.getItems().getSchema(), prefix, suffix));
+            case MAP:
+                return new JMap(
+                        fromJsonSchema(
+                                key, prop.getAdditionalProperties().getSchema(), prefix, suffix));
             case OBJECT:
-                // Taking the schema defined in AdditionalProperties instead
-                if (prop.getAdditionalProperties() != null
-                        && prop.getAdditionalProperties().getSchema() != null) {
-                    return fromJsonSchema(
-                            key, prop.getAdditionalProperties().getSchema(), prefix, suffix);
-                } else {
-                    boolean preserveUnknownFields =
-                            (prop.getXKubernetesPreserveUnknownFields() != null
-                                    && prop.getXKubernetesPreserveUnknownFields());
-                    return new JObject(
-                            key,
-                            prop.getProperties(),
-                            new JObjectOptions(preserveUnknownFields, prefix, suffix));
-                }
+                boolean preserveUnknownFields =
+                        (prop.getXKubernetesPreserveUnknownFields() != null
+                                && prop.getXKubernetesPreserveUnknownFields());
+                return new JObject(
+                        key,
+                        prop.getProperties(),
+                        prop.getRequired(),
+                        new JObjectOptions(preserveUnknownFields, prefix, suffix));
+            case ENUM:
+                return new JEnum(key, prop.getEnum());
             default:
                 throw new RuntimeException("unreachable " + nt.getType());
         }

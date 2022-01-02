@@ -67,14 +67,13 @@
                     </googleJavaFormat>
                 </java>
             </configuration>
-<!--            <executions>-->
-<!--              <execution>-->
-<!--                <goals>-->
-<!--                  <goal>apply</goal>-->
-<!--                </goals>-->
-<!--                <phase>compile</phase>-->
-<!--              </execution>-->
-<!--            </executions>-->
+            <executions>
+              <execution>
+                <goals>
+                  <goal>apply</goal>
+                </goals>
+              </execution>
+            </executions>
         </plugin>
     </plugins>
   </build>

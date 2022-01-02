@@ -15,10 +15,8 @@
  */
 package io.fabric8.java.generator.nodes;
 
-public enum JavaType {
-    PRIMITIVE,
-    OBJECT,
-    ARRAY,
-    MAP,
-    ENUM
+public class JEnumNameAndType extends JavaNameAndType {
+    public JEnumNameAndType(String name) {
+        super(name, JavaType.ENUM);
+    }
 }

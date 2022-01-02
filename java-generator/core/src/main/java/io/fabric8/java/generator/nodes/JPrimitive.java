@@ -17,12 +17,12 @@ package io.fabric8.java.generator.nodes;
 
 import com.github.javaparser.ast.CompilationUnit;
 import java.util.ArrayList;
-import java.util.List;
 
 public class JPrimitive extends AbstractJSONSchema2Pojo {
     private String type;
 
-    private static final List<String> empty = new ArrayList<String>();
+    private static final GeneratorResult empty =
+            new GeneratorResult(new ArrayList<String>(), new ArrayList<>());
 
     public JPrimitive(String type) {
         this.type = type;
@@ -34,7 +34,7 @@ public class JPrimitive extends AbstractJSONSchema2Pojo {
     }
 
     @Override
-    public List<String> generateJava(CompilationUnit cu) {
+    public GeneratorResult generateJava(CompilationUnit cu) {
         return empty;
     }
 }

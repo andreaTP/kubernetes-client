@@ -18,14 +18,14 @@ package io.fabric8.java.generator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.EnumDeclaration;
 import io.fabric8.java.generator.nodes.*;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import org.junit.jupiter.api.Test;
 
 public class GeneratorTest {
@@ -36,14 +36,14 @@ public class GeneratorTest {
     void testCR() {
         // Arrange
         CompilationUnit cu = new CompilationUnit();
-        JCRObject cro = new JCRObject("t", "g", "v");
+        JCRObject cro = new JCRObject("t", "g", "v", true, true);
 
         // Act
-        List<String> res = cro.generateJava(cu);
+        GeneratorResult res = cro.generateJava(cu);
 
         // Assert
-        assertEquals(1, res.size());
-        assertEquals("t", res.get(0));
+        assertEquals(1, res.getTopLevelClasses().size());
+        assertEquals("t", res.getTopLevelClasses().get(0));
     }
 
     @Test
@@ -52,11 +52,11 @@ public class GeneratorTest {
         JPrimitive primitive = new JPrimitive("test");
 
         // Act
-        List<String> res = primitive.generateJava(new CompilationUnit());
+        GeneratorResult res = primitive.generateJava(new CompilationUnit());
 
         // Assert
         assertEquals("test", primitive.getType());
-        assertEquals(0, res.size());
+        assertEquals(0, res.getTopLevelClasses().size());
     }
 
     @Test
@@ -65,25 +65,38 @@ public class GeneratorTest {
         JArray array = new JArray(new JPrimitive("primitive"));
 
         // Act
-        List<String> res = array.generateJava(new CompilationUnit());
+        GeneratorResult res = array.generateJava(new CompilationUnit());
 
         // Assert
         assertEquals("java.util.List<primitive>", array.getType());
-        assertEquals(0, res.size());
+        assertEquals(0, res.getTopLevelClasses().size());
+    }
+
+    @Test
+    void testMapOfPrimitives() {
+        // Arrange
+        JMap map = new JMap(new JPrimitive("primitive"));
+
+        // Act
+        GeneratorResult res = map.generateJava(new CompilationUnit());
+
+        // Assert
+        assertEquals("java.util.Map<java.lang.String, primitive>", map.getType());
+        assertEquals(0, res.getTopLevelClasses().size());
     }
 
     @Test
     void testEmptyObject() {
         // Arrange
-        JObject obj = new JObject("t", null, dummyOptions);
+        JObject obj = new JObject("t", null, null, dummyOptions);
 
         // Act
-        List<String> res = obj.generateJava(new CompilationUnit());
+        GeneratorResult res = obj.generateJava(new CompilationUnit());
 
         // Assert
         assertEquals("T", obj.getType());
-        assertEquals(1, res.size());
-        assertEquals("T", res.get(0));
+        assertEquals(1, res.getTopLevelClasses().size());
+        assertEquals("T", res.getTopLevelClasses().get(0));
     }
 
     @Test
@@ -94,15 +107,15 @@ public class GeneratorTest {
         JSONSchemaProps newBool = new JSONSchemaProps();
         newBool.setType("boolean");
         props.put("o1", newBool);
-        JObject obj = new JObject("t", props, dummyOptions);
+        JObject obj = new JObject("t", props, null, dummyOptions);
 
         // Act
-        List<String> res = obj.generateJava(cu);
+        GeneratorResult res = obj.generateJava(cu);
 
         // Assert
         assertEquals("T", obj.getType());
-        assertEquals(1, res.size());
-        assertEquals("T", res.get(0));
+        assertEquals(1, res.getTopLevelClasses().size());
+        assertEquals("T", res.getTopLevelClasses().get(0));
 
         Optional<ClassOrInterfaceDeclaration> clz = cu.getClassByName("T");
         assertTrue(clz.isPresent());
@@ -111,17 +124,81 @@ public class GeneratorTest {
     }
 
     @Test
-    void testArrayOfObjects() {
+    void testObjectWithRequiredField() {
         // Arrange
-        JArray array = new JArray(new JObject("t", null, dummyOptions));
+        CompilationUnit cu = new CompilationUnit();
+        Map<String, JSONSchemaProps> props = new HashMap<>();
+        JSONSchemaProps newBool = new JSONSchemaProps();
+        newBool.setType("boolean");
+        props.put("o1", newBool);
+        List<String> req = new ArrayList<>(1);
+        req.add("o1");
+        JObject obj = new JObject("t", props, req, dummyOptions);
 
         // Act
-        List<String> res = array.generateJava(new CompilationUnit());
+        GeneratorResult res = obj.generateJava(cu);
+
+        // Assert
+        Optional<ClassOrInterfaceDeclaration> clz = cu.getClassByName("T");
+        assertTrue(clz.get().getFieldByName("o1").get().getAnnotationByName("NotNull").isPresent());
+    }
+
+    @Test
+    void testEnum() {
+        // Arrange
+        CompilationUnit cu = new CompilationUnit();
+        Map<String, JSONSchemaProps> props = new HashMap<>();
+        JSONSchemaProps newEnum = new JSONSchemaProps();
+        newEnum.setType("string");
+        List<JsonNode> enumValues = new ArrayList<>();
+        enumValues.add(new TextNode("foo"));
+        enumValues.add(new TextNode("bar"));
+        enumValues.add(new TextNode("baz"));
+        props.put("e1", newEnum);
+        JEnum enu = new JEnum("t", enumValues);
+
+        // Act
+        GeneratorResult res = enu.generateJava(cu);
+
+        // Assert
+        assertEquals("T", enu.getType());
+        assertEquals(1, res.getInnerClasses().size());
+        assertEquals("T", res.getInnerClasses().get(0));
+
+        Optional<EnumDeclaration> en = cu.getEnumByName("T");
+        assertTrue(en.isPresent());
+        assertEquals(3, en.get().getEntries().size());
+        assertEquals("foo", en.get().getEntries().get(0).getName().asString());
+        assertEquals("bar", en.get().getEntries().get(1).getName().asString());
+        assertEquals("baz", en.get().getEntries().get(2).getName().asString());
+    }
+
+    @Test
+    void testArrayOfObjects() {
+        // Arrange
+        JArray array = new JArray(new JObject("t", null, null, dummyOptions));
+
+        // Act
+        GeneratorResult res = array.generateJava(new CompilationUnit());
 
         // Assert
         assertEquals("java.util.List<T>", array.getType());
-        assertEquals(1, res.size());
-        assertEquals("T", res.get(0));
+        assertEquals(1, res.getTopLevelClasses().size());
+        assertEquals("T", res.getTopLevelClasses().get(0));
+    }
+
+    @Test
+    void testMapOfObjects() {
+        // Arrange
+        JMap map = new JMap(new JObject("t", null, null, dummyOptions));
+
+        // Act
+        GeneratorResult res = map.generateJava(new CompilationUnit());
+
+        // Assert
+        assertEquals("java.util.Map<java.lang.String, T>", map.getType());
+        assertEquals(1, res.getTopLevelClasses().size());
+        assertEquals("T", res.getTopLevelClasses().get(0));
     }
 
     @Test
@@ -132,15 +209,15 @@ public class GeneratorTest {
         JSONSchemaProps newObj = new JSONSchemaProps();
         newObj.setType("object");
         props.put("o1", newObj);
-        JObject obj = new JObject("t", props, dummyOptions);
+        JObject obj = new JObject("t", props, null, dummyOptions);
 
         // Act
-        List<String> res = obj.generateJava(cu);
+        GeneratorResult res = obj.generateJava(cu);
 
         // Assert
-        assertEquals(2, res.size());
-        assertEquals("O1", res.get(0));
-        assertEquals("T", res.get(1));
+        assertEquals(2, res.getTopLevelClasses().size());
+        assertEquals("O1", res.getTopLevelClasses().get(0));
+        assertEquals("T", res.getTopLevelClasses().get(1));
 
         Optional<ClassOrInterfaceDeclaration> clzT = cu.getClassByName("T");
         assertTrue(clzT.isPresent());
@@ -154,14 +231,14 @@ public class GeneratorTest {
     void testObjectWithPreservedFields() {
         // Arrange
         CompilationUnit cu = new CompilationUnit();
-        JObject obj = new JObject("t", null, new JObjectOptions(true, "", ""));
+        JObject obj = new JObject("t", null, null, new JObjectOptions(true, "", ""));
 
         // Act
-        List<String> res = obj.generateJava(cu);
+        GeneratorResult res = obj.generateJava(cu);
 
         // Assert
-        assertEquals(1, res.size());
-        assertEquals("T", res.get(0));
+        assertEquals(1, res.getTopLevelClasses().size());
+        assertEquals("T", res.getTopLevelClasses().get(0));
 
         Optional<ClassOrInterfaceDeclaration> clzT = cu.getClassByName("T");
         assertTrue(clzT.isPresent());
