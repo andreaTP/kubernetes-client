@@ -196,6 +196,7 @@ KeycloakJavaCr[2] = package v1alpha1;
 public class KeycloakStatus implements io.fabric8.kubernetes.api.model.KubernetesResource {
 
     @com.fasterxml.jackson.annotation.JsonProperty("phase")
+    @javax.validation.constraints.NotNull()
     private String phase;
 
     public String getPhase() {
@@ -229,6 +230,7 @@ public class KeycloakStatus implements io.fabric8.kubernetes.api.model.Kubernete
     }
 
     @com.fasterxml.jackson.annotation.JsonProperty("credentialSecret")
+    @javax.validation.constraints.NotNull()
     private String credentialSecret;
 
     public String getCredentialSecret() {
@@ -240,6 +242,7 @@ public class KeycloakStatus implements io.fabric8.kubernetes.api.model.Kubernete
     }
 
     @com.fasterxml.jackson.annotation.JsonProperty("ready")
+    @javax.validation.constraints.NotNull()
     private Boolean ready;
 
     public Boolean getReady() {
@@ -251,6 +254,7 @@ public class KeycloakStatus implements io.fabric8.kubernetes.api.model.Kubernete
     }
 
     @com.fasterxml.jackson.annotation.JsonProperty("internalURL")
+    @javax.validation.constraints.NotNull()
     private String internalURL;
 
     public String getInternalURL() {
@@ -262,6 +266,7 @@ public class KeycloakStatus implements io.fabric8.kubernetes.api.model.Kubernete
     }
 
     @com.fasterxml.jackson.annotation.JsonProperty("message")
+    @javax.validation.constraints.NotNull()
     private String message;
 
     public String getMessage() {
@@ -273,6 +278,7 @@ public class KeycloakStatus implements io.fabric8.kubernetes.api.model.Kubernete
     }
 
     @com.fasterxml.jackson.annotation.JsonProperty("version")
+    @javax.validation.constraints.NotNull()
     private String version;
 
     public String getVersion() {
