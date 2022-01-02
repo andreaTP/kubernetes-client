@@ -133,11 +133,10 @@ public abstract class AbstractJSONSchema2Pojo {
             case ARRAY:
                 return new JArray(fromJsonSchema(key, prop.getItems().getSchema(), prefix, suffix));
             case OBJECT:
-                // Taking the schema defined in AdditionalProperties instead
-                if (prop.getAdditionalProperties() != null
-                        && prop.getAdditionalProperties().getSchema() != null) {
-                    return fromJsonSchema(
-                            key, prop.getAdditionalProperties().getSchema(), prefix, suffix);
+                if (prop.getAdditionalProperties() != null &&
+                    prop.getAdditionalProperties().getSchema() != null) {
+                    return new JMap(
+                            fromJsonSchema(key, prop.getAdditionalProperties().getSchema(), prefix, suffix));
                 } else {
                     boolean preserveUnknownFields =
                             (prop.getXKubernetesPreserveUnknownFields() != null

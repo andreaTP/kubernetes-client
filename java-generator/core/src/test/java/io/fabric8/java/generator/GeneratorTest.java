@@ -73,6 +73,19 @@ public class GeneratorTest {
     }
 
     @Test
+    void testMapOfPrimitives() {
+        // Arrange
+        JMap map = new JMap(new JPrimitive("primitive"));
+
+        // Act
+        List<String> res = map.generateJava(new CompilationUnit());
+
+        // Assert
+        assertEquals("java.util.Map<java.lang.String, primitive>", map.getType());
+        assertEquals(0, res.size());
+    }
+
+    @Test
     void testEmptyObject() {
         // Arrange
         JObject obj = new JObject("t", null, dummyOptions);
@@ -120,6 +133,20 @@ public class GeneratorTest {
 
         // Assert
         assertEquals("java.util.List<T>", array.getType());
+        assertEquals(1, res.size());
+        assertEquals("T", res.get(0));
+    }
+
+    @Test
+    void testMapOfObjects() {
+        // Arrange
+        JMap map = new JMap(new JObject("t", null, dummyOptions));
+
+        // Act
+        List<String> res = map.generateJava(new CompilationUnit());
+
+        // Assert
+        assertEquals("java.util.Map<java.lang.String, T>", map.getType());
         assertEquals(1, res.size());
         assertEquals("T", res.get(0));
     }
