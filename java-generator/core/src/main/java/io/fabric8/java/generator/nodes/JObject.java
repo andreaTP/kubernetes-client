@@ -178,12 +178,14 @@ public class JObject extends AbstractJSONSchema2Pojo {
 
             // For now the inner types are only for enums
             if (gr.getInnerClasses().size() > 0) {
-              for (String ic: gr.getInnerClasses()) {
-                if (cu.getEnumByName(ic).isPresent()) {
-                  clz.addMember(cu.getEnumByName(ic).get());
+              for (String enumName: gr.getInnerClasses()) {
+                if (cu.getEnumByName(enumName).isPresent() &&
+                  !clz.getMembers().contains(cu.getEnumByName(enumName).get())) {
+
+                  clz.addMember(cu.getEnumByName(enumName).get());
 
                   // removing this enum from the top level compilation unit
-                  cu.remove(cu.getEnumByName(ic).get());
+                  cu.remove(cu.getEnumByName(enumName).get());
                 }
               }
             }
