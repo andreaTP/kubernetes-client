@@ -45,7 +45,7 @@ public class JMap extends AbstractJSONSchema2Pojo {
     }
 
     @Override
-    public List<String> generateJava(CompilationUnit cu) {
+    public GeneratorResult generateJava(CompilationUnit cu) {
         return nested.generateJava(cu);
     }
 }

@@ -79,7 +79,7 @@ public class JObject extends AbstractJSONSchema2Pojo {
     }
 
     @Override
-    public List<String> generateJava(CompilationUnit cu) {
+    public GeneratorResult generateJava(CompilationUnit cu) {
         ClassOrInterfaceDeclaration clz = cu.getClassByName(this.type).orElse(null);
 
         if (clz == null) {
@@ -173,7 +173,22 @@ public class JObject extends AbstractJSONSchema2Pojo {
         List<String> buffer = new ArrayList<String>(this.fields.size() + 1);
         for (String k : this.fields.keySet()) {
             AbstractJSONSchema2Pojo prop = this.fields.get(k);
-            buffer.addAll(prop.generateJava(cu));
+
+            GeneratorResult gr = prop.generateJava(cu);
+
+            // For now the inner types are only for enums
+            if (gr.getInnerClasses().size() > 0) {
+              for (String ic: gr.getInnerClasses()) {
+                if (cu.getEnumByName(ic).isPresent()) {
+                  clz.addMember(cu.getEnumByName(ic).get());
+
+                  // removing this enum from the top level compilation unit
+                  cu.remove(cu.getEnumByName(ic).get());
+                }
+              }
+            }
+
+            buffer.addAll(gr.getTopLevelClasses());
 
             String originalFieldName = k;
             String fieldName = AbstractJSONSchema2Pojo.sanitizeString(k);
@@ -200,6 +215,6 @@ public class JObject extends AbstractJSONSchema2Pojo {
         }
         buffer.add(this.type);
 
-        return buffer;
+        return new GeneratorResult(buffer);
     }
 }

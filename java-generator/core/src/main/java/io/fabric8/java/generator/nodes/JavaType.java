@@ -19,5 +19,6 @@ public enum JavaType {
     PRIMITIVE,
     OBJECT,
     ARRAY,
-    MAP
+    MAP,
+    ENUM
 }

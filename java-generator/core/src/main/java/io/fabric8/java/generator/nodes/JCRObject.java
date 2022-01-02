@@ -42,7 +42,7 @@ public class JCRObject extends AbstractJSONSchema2Pojo {
     }
 
     @Override
-    public List<String> generateJava(CompilationUnit cu) {
+    public GeneratorResult generateJava(CompilationUnit cu) {
         ClassOrInterfaceDeclaration clz =
                 cu.getClassByName(this.type).orElse(cu.addClass(this.type));
 
@@ -67,6 +67,6 @@ public class JCRObject extends AbstractJSONSchema2Pojo {
 
         List<String> result = new ArrayList<>(1);
         result.add(this.type);
-        return result;
+        return new GeneratorResult(result);
     }
 }

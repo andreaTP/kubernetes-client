@@ -25,7 +25,7 @@ public abstract class AbstractJSONSchema2Pojo {
 
     public abstract String getType();
 
-    public abstract List<String> generateJava(CompilationUnit cu);
+    public abstract GeneratorResult generateJava(CompilationUnit cu);
 
     public static String sanitizeString(String str) {
         String sanitized = "";
@@ -64,7 +64,9 @@ public abstract class AbstractJSONSchema2Pojo {
         } else if (prop.getType() == null
                 && prop.getXKubernetesPreserveUnknownFields() != null
                 && prop.getXKubernetesPreserveUnknownFields()) {
-            return fromJsonSchema(key, new JObjectNameAndType(key), prop, prefix, suffix);
+          return fromJsonSchema(key, new JObjectNameAndType(key), prop, prefix, suffix);
+        } else if (prop.getEnum() != null && prop.getEnum().size() > 0) {
+          return fromJsonSchema(key, new JEnumNameAndType(key), prop, prefix, suffix);
         } else {
             if (prop.getType() == null) {
                 throw new RuntimeException("Type for key:" + key + " is null");
@@ -142,8 +144,10 @@ public abstract class AbstractJSONSchema2Pojo {
                         key,
                         prop.getProperties(),
                         new JObjectOptions(preserveUnknownFields, prefix, suffix));
-            default:
-                throw new RuntimeException("unreachable " + nt.getType());
+          case ENUM:
+            return new JEnum(key, prop.getEnum());
+          default:
+              throw new RuntimeException("unreachable " + nt.getType());
         }
     }
 }

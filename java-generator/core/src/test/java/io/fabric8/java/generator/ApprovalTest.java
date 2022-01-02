@@ -40,47 +40,69 @@ public class ApprovalTest {
                 .get();
     }
 
-    @Test
-    void testCrontabCrd() {
-        // Arrange
-        CustomResourceDefinition crd = getCRD("crontab-crd.yml");
+//    @Test
+//    void testCrontabCrd() {
+//        // Arrange
+//        CustomResourceDefinition crd = getCRD("crontab-crd.yml");
+//
+//        // Act
+//        List<WritableCRCompilationUnit> writables = runner.generate(crd, Optional.empty());
+//
+//        // Assert
+//        assertEquals(1, writables.size());
+//        assertThat(writables.size()).isEqualTo(1);
+//
+//        WritableCRCompilationUnit writable = writables.get(0);
+//
+//        List<String> underTest = new ArrayList<>();
+//        underTest.add(writable.getJavaClass("CronTab"));
+//        underTest.add(writable.getJavaClass("CronTabSpec"));
+//        underTest.add(writable.getJavaClass("CronTabStatus"));
+//
+//        Approvals.verifyAll("CrontabJavaCr", underTest);
+//    }
+//
+//    @Test
+//    void testKeycloakCrd() {
+//        // Arrange
+//        CustomResourceDefinition crd = getCRD("keycloak-crd.yml");
+//
+//        // Act
+//        List<WritableCRCompilationUnit> writables = runner.generate(crd, Optional.empty());
+//
+//        // Assert
+//        assertEquals(1, writables.size());
+//        assertThat(writables.size()).isEqualTo(1);
+//
+//        WritableCRCompilationUnit writable = writables.get(0);
+//
+//        List<String> underTest = new ArrayList<>();
+//        underTest.add(writable.getJavaClass("Keycloak"));
+//        underTest.add(writable.getJavaClass("KeycloakSpec"));
+//        underTest.add(writable.getJavaClass("KeycloakStatus"));
+//
+//        Approvals.verifyAll("KeycloakJavaCr", underTest);
+//    }
 
-        // Act
-        List<WritableCRCompilationUnit> writables = runner.generate(crd, Optional.empty());
+  @Test
+  void testJokeCrd() {
+    // Arrange
+    CustomResourceDefinition crd = getCRD("jokerequests-crd.yml");
 
-        // Assert
-        assertEquals(1, writables.size());
-        assertThat(writables.size()).isEqualTo(1);
+    // Act
+    List<WritableCRCompilationUnit> writables = runner.generate(crd, Optional.empty());
 
-        WritableCRCompilationUnit writable = writables.get(0);
+    // Assert
+    assertEquals(1, writables.size());
+    assertThat(writables.size()).isEqualTo(1);
 
-        List<String> underTest = new ArrayList<>();
-        underTest.add(writable.getJavaClass("CronTab"));
-        underTest.add(writable.getJavaClass("CronTabSpec"));
-        underTest.add(writable.getJavaClass("CronTabStatus"));
+    WritableCRCompilationUnit writable = writables.get(0);
 
-        Approvals.verifyAll("CrontabJavaCr", underTest);
-    }
+    List<String> underTest = new ArrayList<>();
+    underTest.add(writable.getJavaClass("JokeRequest"));
+    underTest.add(writable.getJavaClass("JokeRequestSpec"));
+    underTest.add(writable.getJavaClass("JokeRequestStatus"));
 
-    @Test
-    void testKeycloakCrd() {
-        // Arrange
-        CustomResourceDefinition crd = getCRD("keycloak-crd.yml");
-
-        // Act
-        List<WritableCRCompilationUnit> writables = runner.generate(crd, Optional.empty());
-
-        // Assert
-        assertEquals(1, writables.size());
-        assertThat(writables.size()).isEqualTo(1);
-
-        WritableCRCompilationUnit writable = writables.get(0);
-
-        List<String> underTest = new ArrayList<>();
-        underTest.add(writable.getJavaClass("Keycloak"));
-        underTest.add(writable.getJavaClass("KeycloakSpec"));
-        underTest.add(writable.getJavaClass("KeycloakStatus"));
-
-        Approvals.verifyAll("KeycloakJavaCr", underTest);
-    }
+    Approvals.verifyAll("JokeRequestJavaCr", underTest);
+  }
 }

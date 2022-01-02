@@ -17,6 +17,7 @@ package io.fabric8.java.generator;
 
 import com.github.javaparser.ast.CompilationUnit;
 import io.fabric8.java.generator.nodes.AbstractJSONSchema2Pojo;
+import io.fabric8.java.generator.nodes.GeneratorResult;
 import io.fabric8.java.generator.nodes.JCRObject;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinitionSpec;
@@ -78,14 +79,30 @@ public class CRGeneratorRunner {
 
             List<String> classNames = new ArrayList<String>();
 
-            classNames.addAll(crGenerator.generateJava(cu));
-            classNames.addAll(specGenerator.generateJava(cu));
-            classNames.addAll(statusGenerator.generateJava(cu));
+          classNames.addAll(
+            validateAndAggregate(crGenerator.generateJava(cu),
+              specGenerator.generateJava(cu),
+              statusGenerator.generateJava(cu)));
 
             writableCUs.add(new WritableCRCompilationUnit(cu, classNames));
         }
 
         return writableCUs;
+    }
+
+    private List<String> validateAndAggregate(GeneratorResult... grs) {
+      List<String> finalResult = new ArrayList<>();
+      for (GeneratorResult gr : grs) {
+        validateTopLevel(gr);
+        finalResult.addAll(gr.getTopLevelClasses());
+      }
+      return finalResult;
+    }
+
+    private void validateTopLevel(GeneratorResult gr) {
+      if (gr.getInnerClasses().size() > 0) {
+        throw new RuntimeException("Unmatched inner class spilled up to top level " + gr.getInnerClasses().get(0));
+      }
     }
 
     private Optional<String> getPackage(String group) {
