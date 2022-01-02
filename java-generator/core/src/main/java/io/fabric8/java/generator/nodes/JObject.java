@@ -18,18 +18,16 @@ package io.fabric8.java.generator.nodes;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
-import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.*;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JObject extends AbstractJSONSchema2Pojo {
 
@@ -48,11 +46,15 @@ public class JObject extends AbstractJSONSchema2Pojo {
     private Set<String> required = new HashSet<>();
     private JObjectOptions options;
 
-    public JObject(String type, Map<String, JSONSchemaProps> fields, List<String> required, JObjectOptions options) {
+    public JObject(
+            String type,
+            Map<String, JSONSchemaProps> fields,
+            List<String> required,
+            JObjectOptions options) {
         this.options = options;
 
         if (required != null) {
-          this.required.addAll(required);
+            this.required.addAll(required);
         }
 
         String nextPrefix = options.getPrefix();
@@ -93,67 +95,69 @@ public class JObject extends AbstractJSONSchema2Pojo {
         ClassOrInterfaceDeclaration clz = cu.getClassByName(this.type).orElse(null);
 
         if (clz != null) {
-          // TODO: investigate a more nested structure for the generated code
-          LOGGER.warn("A class named {} have been already processed, if this class have multiple implementations the resulting code can be corrupted", this.type);
-          return new GeneratorResult();
+            // TODO: investigate a more nested structure for the generated code
+            LOGGER.warn(
+                    "A class named {} have been already processed, if this class have multiple implementations the resulting code might be incorrect",
+                    this.type);
+            return new GeneratorResult();
         }
 
-            clz = cu.addClass(this.type);
+        clz = cu.addClass(this.type);
 
-            clz.addAnnotation(
-                    new SingleMemberAnnotationExpr(
-                            new Name("com.fasterxml.jackson.annotation.JsonInclude"),
-                            new NameExpr(
-                                    "com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL")));
+        clz.addAnnotation(
+                new SingleMemberAnnotationExpr(
+                        new Name("com.fasterxml.jackson.annotation.JsonInclude"),
+                        new NameExpr(
+                                "com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL")));
 
-            List<String> sortedFields =
-                    this.fields.keySet().stream().sorted().collect(Collectors.toList());
-            StringBuilder sb = new StringBuilder();
-            sb.append("{");
-            while (!sortedFields.isEmpty()) {
-                sb.append("\"" + sortedFields.remove(0) + "\"");
-                if (!sortedFields.isEmpty()) {
-                    sb.append(",");
-                }
+        List<String> sortedFields =
+                this.fields.keySet().stream().sorted().collect(Collectors.toList());
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        while (!sortedFields.isEmpty()) {
+            sb.append("\"" + sortedFields.remove(0) + "\"");
+            if (!sortedFields.isEmpty()) {
+                sb.append(",");
             }
-            sb.append("}");
+        }
+        sb.append("}");
 
-            clz.addAnnotation(
-                    new SingleMemberAnnotationExpr(
-                            new Name("com.fasterxml.jackson.annotation.JsonPropertyOrder"),
-                            new NameExpr(sb.toString())));
+        clz.addAnnotation(
+                new SingleMemberAnnotationExpr(
+                        new Name("com.fasterxml.jackson.annotation.JsonPropertyOrder"),
+                        new NameExpr(sb.toString())));
 
-            clz.addAnnotation(
-                    new SingleMemberAnnotationExpr(
-                            new Name("com.fasterxml.jackson.databind.annotation.JsonDeserialize"),
-                            new NameExpr(
-                                    "using = com.fasterxml.jackson.databind.JsonDeserializer.None.class")));
+        clz.addAnnotation(
+                new SingleMemberAnnotationExpr(
+                        new Name("com.fasterxml.jackson.databind.annotation.JsonDeserialize"),
+                        new NameExpr(
+                                "using = com.fasterxml.jackson.databind.JsonDeserializer.None.class")));
 
-            clz.addAnnotation("lombok.ToString");
-            clz.addAnnotation("lombok.EqualsAndHashCode");
-            clz.addAnnotation("lombok.Setter");
+        clz.addAnnotation("lombok.ToString");
+        clz.addAnnotation("lombok.EqualsAndHashCode");
+        clz.addAnnotation("lombok.Setter");
 
-            clz.addAnnotation(
-                    new SingleMemberAnnotationExpr(
-                            new Name("lombok.experimental.Accessors"),
-                            new NameExpr("prefix = {\n" + "    \"_\",\n" + "    \"\"\n" + "}")));
+        clz.addAnnotation(
+                new SingleMemberAnnotationExpr(
+                        new Name("lombok.experimental.Accessors"),
+                        new NameExpr("prefix = {\n" + "    \"_\",\n" + "    \"\"\n" + "}")));
 
-            clz.addAnnotation(
-                    new SingleMemberAnnotationExpr(
-                            new Name("io.sundr.builder.annotations.Buildable"),
-                            new NameExpr(
-                                    "editableEnabled = false, validationEnabled = false, generateBuilderPackage = false, builderPackage = \"io.fabric8.kubernetes.api.builder\", refs = {\n"
-                                            + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.ObjectMeta.class),\n"
-                                            + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.ObjectReference.class),\n"
-                                            + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.LabelSelector.class),\n"
-                                            + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.Container.class),\n"
-                                            + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.EnvVar.class),\n"
-                                            + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.ContainerPort.class),\n"
-                                            + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.Volume.class),\n"
-                                            + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.VolumeMount.class)\n"
-                                            + "}")));
+        clz.addAnnotation(
+                new SingleMemberAnnotationExpr(
+                        new Name("io.sundr.builder.annotations.Buildable"),
+                        new NameExpr(
+                                "editableEnabled = false, validationEnabled = false, generateBuilderPackage = false, builderPackage = \"io.fabric8.kubernetes.api.builder\", refs = {\n"
+                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.ObjectMeta.class),\n"
+                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.ObjectReference.class),\n"
+                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.LabelSelector.class),\n"
+                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.Container.class),\n"
+                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.EnvVar.class),\n"
+                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.ContainerPort.class),\n"
+                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.Volume.class),\n"
+                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.VolumeMount.class)\n"
+                                        + "}")));
 
-            clz.addImplementedType("io.fabric8.kubernetes.api.model.KubernetesResource");
+        clz.addImplementedType("io.fabric8.kubernetes.api.model.KubernetesResource");
 
         if (this.options.isPreserveUnknownFields()) {
             if (!clz.getFieldByName("additionalProperties").isPresent()) {
@@ -190,15 +194,15 @@ public class JObject extends AbstractJSONSchema2Pojo {
         CompilationUnit supportCU = new CompilationUnit();
         for (String k : this.fields.keySet()) {
             AbstractJSONSchema2Pojo prop = this.fields.get(k);
-//            boolean required = this.required.contains(k);
+            boolean required = this.required.contains(k);
 
             GeneratorResult gr = prop.generateJava(supportCU);
 
             // For now the inner types are only for enums
             if (gr.getInnerClasses().size() > 0) {
-              for (String enumName: gr.getInnerClasses()) {
-                clz.addMember(supportCU.getEnumByName(enumName).get());
-              }
+                for (String enumName : gr.getInnerClasses()) {
+                    clz.addMember(supportCU.getEnumByName(enumName).get());
+                }
             }
 
             gr = prop.generateJava(cu);
@@ -217,9 +221,9 @@ public class JObject extends AbstractJSONSchema2Pojo {
                                     new Name("com.fasterxml.jackson.annotation.JsonProperty"),
                                     new StringLiteralExpr(originalFieldName)));
 
-//                    if (required) {
-//                      objField.addAnnotation("javax.validation.constraints.NotNull");
-//                    }
+                    if (required) {
+                        objField.addAnnotation("javax.validation.constraints.NotNull");
+                    }
 
                     objField.createGetter();
                     objField.createSetter();

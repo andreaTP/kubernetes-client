@@ -16,14 +16,11 @@
 package io.fabric8.java.generator.nodes;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
-import com.github.javaparser.ast.type.ClassOrInterfaceType;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,14 +31,13 @@ public class JEnum extends AbstractJSONSchema2Pojo {
     private List<String> values;
 
     public JEnum(String type, List<JsonNode> values) {
-      this.type =
-        AbstractJSONSchema2Pojo.sanitizeString(
-            type.substring(0, 1).toUpperCase()
-            + type.substring(1));
-      this.values = new ArrayList<>(values.size());
-      for (JsonNode v: values) {
-        this.values.add(v.asText());
-      }
+        this.type =
+                AbstractJSONSchema2Pojo.sanitizeString(
+                        type.substring(0, 1).toUpperCase() + type.substring(1));
+        this.values = new ArrayList<>(values.size());
+        for (JsonNode v : values) {
+            this.values.add(v.asText());
+        }
     }
 
     @Override
@@ -49,52 +45,55 @@ public class JEnum extends AbstractJSONSchema2Pojo {
         return this.type;
     }
 
-  @Override
-  public GeneratorResult generateJava(CompilationUnit cu) {
-    EnumDeclaration en = cu.getEnumByName(this.type).orElse(null);
+    @Override
+    public GeneratorResult generateJava(CompilationUnit cu) {
+        EnumDeclaration en = cu.getEnumByName(this.type).orElse(null);
 
-    if (en == null) {
-      en = cu.addEnum(this.type);
+        if (en == null) {
+            en = cu.addEnum(this.type);
 
-      boolean degraded = false;
-      for (String k : this.values) {
-        try {
-          Integer.valueOf(k);
-          degraded = true;
-        } catch (Exception e) {
+            boolean degraded = false;
+            for (String k : this.values) {
+                try {
+                    Integer.valueOf(k);
+                    degraded = true;
+                } catch (Exception e) {
+                }
+            }
+
+            if (!degraded) {
+                for (String k : this.values) {
+                    en.addEnumConstant(sanitizeString(k));
+                }
+            } else {
+                // TODO: test this properly eventually
+                en.addField("java.lang.String", "value");
+                ConstructorDeclaration cd = en.addConstructor();
+                cd.addParameter("java.lang.String", "value");
+                cd.createBody();
+
+                cd.setBody(
+                        new BlockStmt()
+                                .addStatement(
+                                        new AssignExpr(
+                                                new NameExpr("this.value"),
+                                                new NameExpr("value"),
+                                                AssignExpr.Operator.ASSIGN)));
+
+                for (String k : this.values) {
+                    String constantName = sanitizeString(k);
+                    try {
+                        Integer.valueOf(k);
+                        constantName = "V_" + constantName;
+                    } catch (Exception e) {
+                    }
+                    en.addEnumConstant(constantName + "(\"" + k + "\")");
+                }
+            }
         }
-      }
 
-      if (!degraded) {
-        for (String k : this.values) {
-          en.addEnumConstant(sanitizeString(k));
-        }
-      } else {
-        // TODO: test this properly eventually
-        en.addField("java.lang.String", "value");
-        ConstructorDeclaration cd = en.addConstructor();
-        cd.addParameter("java.lang.String", "value");
-        cd.createBody();
-
-        cd.setBody(
-          new BlockStmt().addStatement(new AssignExpr(new NameExpr("this.value"), new NameExpr("value"), AssignExpr.Operator.ASSIGN))
-        );
-
-        for (String k : this.values) {
-          String constantName = sanitizeString(k);
-          try {
-            Integer.valueOf(k);
-            constantName = "V_" + constantName;
-          } catch (Exception e) {
-          }
-          en.addEnumConstant(constantName + "(\"" + k + "\")");
-        }
-
-      }
+        List<String> ret = new ArrayList<>(1);
+        ret.add(this.type);
+        return new GeneratorResult(new ArrayList<>(), ret);
     }
-
-    List<String> ret = new ArrayList<>(1);
-    ret.add(this.type);
-    return new GeneratorResult(new ArrayList<>(), ret);
-  }
 }

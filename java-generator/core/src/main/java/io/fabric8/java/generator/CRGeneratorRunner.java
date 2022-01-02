@@ -61,28 +61,35 @@ public class CRGeneratorRunner {
 
             cu.setPackageDeclaration(pkg);
 
-            AbstractJSONSchema2Pojo crGenerator = new JCRObject(crName, version, group);
+            AbstractJSONSchema2Pojo specGenerator = null;
 
-            AbstractJSONSchema2Pojo specGenerator =
-                    AbstractJSONSchema2Pojo.fromJsonSchema(
-                            "spec",
-                            crdv.getSchema().getOpenAPIV3Schema().getProperties().get("spec"),
-                            crName,
-                            "");
+            if (crdv.getSchema().getOpenAPIV3Schema().getProperties().get("spec") != null) {
+                specGenerator =
+                        AbstractJSONSchema2Pojo.fromJsonSchema(
+                                "spec",
+                                crdv.getSchema().getOpenAPIV3Schema().getProperties().get("spec"),
+                                crName,
+                                "");
+            }
 
-            AbstractJSONSchema2Pojo statusGenerator =
-                    AbstractJSONSchema2Pojo.fromJsonSchema(
-                            "status",
-                            crdv.getSchema().getOpenAPIV3Schema().getProperties().get("status"),
-                            crName,
-                            "");
+            AbstractJSONSchema2Pojo statusGenerator = null;
+            if (crdv.getSchema().getOpenAPIV3Schema().getProperties().get("status") != null) {
+                statusGenerator =
+                        AbstractJSONSchema2Pojo.fromJsonSchema(
+                                "status",
+                                crdv.getSchema().getOpenAPIV3Schema().getProperties().get("status"),
+                                crName,
+                                "");
+            }
+
+            AbstractJSONSchema2Pojo crGenerator =
+                    new JCRObject(
+                            crName, version, group, specGenerator != null, statusGenerator != null);
 
             List<String> classNames = new ArrayList<String>();
 
-          classNames.addAll(
-            validateAndAggregate(crGenerator.generateJava(cu),
-              specGenerator.generateJava(cu),
-              statusGenerator.generateJava(cu)));
+            classNames.addAll(
+                    validateAndAggregate(cu, crGenerator, specGenerator, statusGenerator));
 
             writableCUs.add(new WritableCRCompilationUnit(cu, classNames));
         }
@@ -90,19 +97,23 @@ public class CRGeneratorRunner {
         return writableCUs;
     }
 
-    private List<String> validateAndAggregate(GeneratorResult... grs) {
-      List<String> finalResult = new ArrayList<>();
-      for (GeneratorResult gr : grs) {
-        validateTopLevel(gr);
-        finalResult.addAll(gr.getTopLevelClasses());
-      }
-      return finalResult;
+    private List<String> validateAndAggregate(CompilationUnit cu, AbstractJSONSchema2Pojo... grs) {
+        List<String> finalResult = new ArrayList<>();
+        for (AbstractJSONSchema2Pojo gr : grs) {
+            if (gr != null) {
+                GeneratorResult res = gr.generateJava(cu);
+                validateTopLevel(res);
+                finalResult.addAll(res.getTopLevelClasses());
+            }
+        }
+        return finalResult;
     }
 
     private void validateTopLevel(GeneratorResult gr) {
-      if (gr.getInnerClasses().size() > 0) {
-        throw new RuntimeException("Unmatched inner class spilled up to top level " + gr.getInnerClasses().get(0));
-      }
+        if (gr.getInnerClasses().size() > 0) {
+            throw new RuntimeException(
+                    "Unmatched inner class spilled up to top level " + gr.getInnerClasses().get(0));
+        }
     }
 
     private Optional<String> getPackage(String group) {

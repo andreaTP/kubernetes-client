@@ -29,11 +29,16 @@ public class JCRObject extends AbstractJSONSchema2Pojo {
     private String type;
     private String group;
     private String version;
+    private boolean withSpec;
+    private boolean withStatus;
 
-    public JCRObject(String type, String group, String version) {
+    public JCRObject(
+            String type, String group, String version, boolean withSpec, boolean withStatus) {
         this.type = type;
         this.group = group;
         this.version = version;
+        this.withSpec = withSpec;
+        this.withStatus = withStatus;
     }
 
     @Override
@@ -55,12 +60,20 @@ public class JCRObject extends AbstractJSONSchema2Pojo {
                         new Name("io.fabric8.kubernetes.model.annotation.Group"),
                         new StringLiteralExpr(group)));
 
+        ClassOrInterfaceType spec = new ClassOrInterfaceType().setName(this.type + "Spec");
+        if (!withSpec) {
+            spec = new ClassOrInterfaceType().setName("java.lang.Void");
+        }
+
+        ClassOrInterfaceType status = new ClassOrInterfaceType().setName(this.type + "Status");
+        if (!withSpec) {
+            status = new ClassOrInterfaceType().setName("java.lang.Void");
+        }
+
         ClassOrInterfaceType crType =
                 new ClassOrInterfaceType()
                         .setName("io.fabric8.kubernetes.client.CustomResource")
-                        .setTypeArguments(
-                                new ClassOrInterfaceType().setName(this.type + "Spec"),
-                                new ClassOrInterfaceType().setName(this.type + "Status"));
+                        .setTypeArguments(spec, status);
 
         clz.addExtendedType(crType);
         clz.addImplementedType("io.fabric8.kubernetes.api.model.Namespaced");

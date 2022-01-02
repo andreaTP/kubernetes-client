@@ -19,16 +19,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.EnumDeclaration;
 import io.fabric8.java.generator.nodes.*;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
-
 import java.util.*;
-
 import org.junit.jupiter.api.Test;
 
 public class GeneratorTest {
@@ -39,7 +36,7 @@ public class GeneratorTest {
     void testCR() {
         // Arrange
         CompilationUnit cu = new CompilationUnit();
-        JCRObject cro = new JCRObject("t", "g", "v");
+        JCRObject cro = new JCRObject("t", "g", "v", true, true);
 
         // Act
         GeneratorResult res = cro.generateJava(cu);
@@ -68,7 +65,7 @@ public class GeneratorTest {
         JArray array = new JArray(new JPrimitive("primitive"));
 
         // Act
-      GeneratorResult res = array.generateJava(new CompilationUnit());
+        GeneratorResult res = array.generateJava(new CompilationUnit());
 
         // Assert
         assertEquals("java.util.List<primitive>", array.getType());
@@ -126,55 +123,55 @@ public class GeneratorTest {
         assertTrue(clz.get().getFieldByName("o1").isPresent());
     }
 
-  @Test
-  void testObjectWithRequiredField() {
-    // Arrange
-    CompilationUnit cu = new CompilationUnit();
-    Map<String, JSONSchemaProps> props = new HashMap<>();
-    JSONSchemaProps newBool = new JSONSchemaProps();
-    newBool.setType("boolean");
-    props.put("o1", newBool);
-    List<String> req = new ArrayList<>(1);
-    req.add("o1");
-    JObject obj = new JObject("t", props, req, dummyOptions);
+    @Test
+    void testObjectWithRequiredField() {
+        // Arrange
+        CompilationUnit cu = new CompilationUnit();
+        Map<String, JSONSchemaProps> props = new HashMap<>();
+        JSONSchemaProps newBool = new JSONSchemaProps();
+        newBool.setType("boolean");
+        props.put("o1", newBool);
+        List<String> req = new ArrayList<>(1);
+        req.add("o1");
+        JObject obj = new JObject("t", props, req, dummyOptions);
 
-    // Act
-    GeneratorResult res = obj.generateJava(cu);
+        // Act
+        GeneratorResult res = obj.generateJava(cu);
 
-    // Assert
-    Optional<ClassOrInterfaceDeclaration> clz = cu.getClassByName("T");
-    assertTrue(clz.get().getFieldByName("o1").get().getAnnotationByName("NotNull").isPresent());
-  }
+        // Assert
+        Optional<ClassOrInterfaceDeclaration> clz = cu.getClassByName("T");
+        assertTrue(clz.get().getFieldByName("o1").get().getAnnotationByName("NotNull").isPresent());
+    }
 
-  @Test
-  void testEnum() {
-    // Arrange
-    CompilationUnit cu = new CompilationUnit();
-    Map<String, JSONSchemaProps> props = new HashMap<>();
-    JSONSchemaProps newEnum = new JSONSchemaProps();
-    newEnum.setType("string");
-    List<JsonNode> enumValues = new ArrayList<>();
-    enumValues.add(new TextNode("foo"));
-    enumValues.add(new TextNode("bar"));
-    enumValues.add(new TextNode("baz"));
-    props.put("e1", newEnum);
-    JEnum enu = new JEnum("t", enumValues);
+    @Test
+    void testEnum() {
+        // Arrange
+        CompilationUnit cu = new CompilationUnit();
+        Map<String, JSONSchemaProps> props = new HashMap<>();
+        JSONSchemaProps newEnum = new JSONSchemaProps();
+        newEnum.setType("string");
+        List<JsonNode> enumValues = new ArrayList<>();
+        enumValues.add(new TextNode("foo"));
+        enumValues.add(new TextNode("bar"));
+        enumValues.add(new TextNode("baz"));
+        props.put("e1", newEnum);
+        JEnum enu = new JEnum("t", enumValues);
 
-    // Act
-    GeneratorResult res = enu.generateJava(cu);
+        // Act
+        GeneratorResult res = enu.generateJava(cu);
 
-    // Assert
-    assertEquals("T", enu.getType());
-    assertEquals(1, res.getInnerClasses().size());
-    assertEquals("T", res.getInnerClasses().get(0));
+        // Assert
+        assertEquals("T", enu.getType());
+        assertEquals(1, res.getInnerClasses().size());
+        assertEquals("T", res.getInnerClasses().get(0));
 
-    Optional<EnumDeclaration> en = cu.getEnumByName("T");
-    assertTrue(en.isPresent());
-    assertEquals(3, en.get().getEntries().size());
-    assertEquals("foo", en.get().getEntries().get(0).getName().asString());
-    assertEquals("bar", en.get().getEntries().get(1).getName().asString());
-    assertEquals("baz", en.get().getEntries().get(2).getName().asString());
-  }
+        Optional<EnumDeclaration> en = cu.getEnumByName("T");
+        assertTrue(en.isPresent());
+        assertEquals(3, en.get().getEntries().size());
+        assertEquals("foo", en.get().getEntries().get(0).getName().asString());
+        assertEquals("bar", en.get().getEntries().get(1).getName().asString());
+        assertEquals("baz", en.get().getEntries().get(2).getName().asString());
+    }
 
     @Test
     void testArrayOfObjects() {

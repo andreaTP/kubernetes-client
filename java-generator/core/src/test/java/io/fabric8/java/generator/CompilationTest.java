@@ -28,7 +28,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 import javax.tools.JavaFileObject;
 import org.junit.jupiter.api.AfterAll;
@@ -173,6 +172,22 @@ public class CompilationTest {
         // Assert
         assertTrue(compilation.errors().isEmpty());
         assertEquals(15, compilation.sourceFiles().size());
+        assertEquals(Compilation.Status.SUCCESS, compilation.status());
+    }
+
+    @Test
+    void testJokeRequestsCRDCompiles() throws Exception {
+        // Arrange
+        File crd = getCRD("jokerequests-crd.yml");
+        File dest = tmpFolder.newFolder("jokes");
+
+        // Act
+        runner.run(crd, dest);
+        Compilation compilation = javac().compile(getSources(dest));
+
+        // Assert
+        assertTrue(compilation.errors().isEmpty());
+        assertEquals(3, compilation.sourceFiles().size());
         assertEquals(Compilation.Status.SUCCESS, compilation.status());
     }
 

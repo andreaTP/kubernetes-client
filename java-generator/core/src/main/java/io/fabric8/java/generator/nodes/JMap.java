@@ -18,7 +18,6 @@ package io.fabric8.java.generator.nodes;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
-import java.util.List;
 
 public class JMap extends AbstractJSONSchema2Pojo {
 
