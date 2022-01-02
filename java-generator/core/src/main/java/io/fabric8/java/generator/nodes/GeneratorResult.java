@@ -17,6 +17,11 @@ public class GeneratorResult {
     return topLevelClasses;
   }
 
+  public GeneratorResult() {
+    this.topLevelClasses = new ArrayList<>();
+    this.innerClasses = new ArrayList<>();
+  }
+
   public GeneratorResult(List<String> topLevelClasses) {
     this.topLevelClasses = topLevelClasses;
     this.innerClasses = new ArrayList<>();

@@ -143,6 +143,7 @@ public abstract class AbstractJSONSchema2Pojo {
                 return new JObject(
                         key,
                         prop.getProperties(),
+                        prop.getRequired(),
                         new JObjectOptions(preserveUnknownFields, prefix, suffix));
           case ENUM:
             return new JEnum(key, prop.getEnum());

@@ -16,22 +16,16 @@
 package io.fabric8.java.generator.nodes;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.Modifier;
-import com.github.javaparser.ast.NodeList;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.EnumDeclaration;
-import com.github.javaparser.ast.body.FieldDeclaration;
-import com.github.javaparser.ast.body.VariableDeclarator;
-import com.github.javaparser.ast.expr.Name;
+import com.github.javaparser.ast.body.*;
+import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.NameExpr;
-import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
-import com.github.javaparser.ast.expr.StringLiteralExpr;
+import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class JEnum extends AbstractJSONSchema2Pojo {
 
@@ -46,7 +40,7 @@ public class JEnum extends AbstractJSONSchema2Pojo {
             + type.substring(1));
       this.values = new ArrayList<>(values.size());
       for (JsonNode v: values) {
-        this.values.add(v.textValue());
+        this.values.add(v.asText());
       }
     }
 
@@ -62,8 +56,40 @@ public class JEnum extends AbstractJSONSchema2Pojo {
     if (en == null) {
       en = cu.addEnum(this.type);
 
+      boolean degraded = false;
       for (String k : this.values) {
-        en.addEnumConstant(k);
+        try {
+          Integer.valueOf(k);
+          degraded = true;
+        } catch (Exception e) {
+        }
+      }
+
+      if (!degraded) {
+        for (String k : this.values) {
+          en.addEnumConstant(sanitizeString(k));
+        }
+      } else {
+        // TODO: test this properly eventually
+        en.addField("java.lang.String", "value");
+        ConstructorDeclaration cd = en.addConstructor();
+        cd.addParameter("java.lang.String", "value");
+        cd.createBody();
+
+        cd.setBody(
+          new BlockStmt().addStatement(new AssignExpr(new NameExpr("this.value"), new NameExpr("value"), AssignExpr.Operator.ASSIGN))
+        );
+
+        for (String k : this.values) {
+          String constantName = sanitizeString(k);
+          try {
+            Integer.valueOf(k);
+            constantName = "V_" + constantName;
+          } catch (Exception e) {
+          }
+          en.addEnumConstant(constantName + "(\"" + k + "\")");
+        }
+
       }
     }
 

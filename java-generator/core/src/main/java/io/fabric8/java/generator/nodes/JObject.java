@@ -18,17 +18,22 @@ package io.fabric8.java.generator.nodes;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class JObject extends AbstractJSONSchema2Pojo {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(JObject.class);
     private static final Set<String> IGNORED_FIELDS = new HashSet<>();
 
     static {
@@ -40,10 +45,15 @@ public class JObject extends AbstractJSONSchema2Pojo {
 
     private String type = null;
     private Map<String, AbstractJSONSchema2Pojo> fields = new HashMap<>();
+    private Set<String> required = new HashSet<>();
     private JObjectOptions options;
 
-    public JObject(String type, Map<String, JSONSchemaProps> fields, JObjectOptions options) {
+    public JObject(String type, Map<String, JSONSchemaProps> fields, List<String> required, JObjectOptions options) {
         this.options = options;
+
+        if (required != null) {
+          this.required.addAll(required);
+        }
 
         String nextPrefix = options.getPrefix();
         String nextSuffix = options.getSuffix();
@@ -82,7 +92,12 @@ public class JObject extends AbstractJSONSchema2Pojo {
     public GeneratorResult generateJava(CompilationUnit cu) {
         ClassOrInterfaceDeclaration clz = cu.getClassByName(this.type).orElse(null);
 
-        if (clz == null) {
+        if (clz != null) {
+          // TODO: investigate a more nested structure for the generated code
+          LOGGER.warn("A class named {} have been already processed, if this class have multiple implementations the resulting code can be corrupted", this.type);
+          return new GeneratorResult();
+        }
+
             clz = cu.addClass(this.type);
 
             clz.addAnnotation(
@@ -139,7 +154,6 @@ public class JObject extends AbstractJSONSchema2Pojo {
                                             + "}")));
 
             clz.addImplementedType("io.fabric8.kubernetes.api.model.KubernetesResource");
-        }
 
         if (this.options.isPreserveUnknownFields()) {
             if (!clz.getFieldByName("additionalProperties").isPresent()) {
@@ -171,25 +185,23 @@ public class JObject extends AbstractJSONSchema2Pojo {
         }
 
         List<String> buffer = new ArrayList<String>(this.fields.size() + 1);
+
+        // CU to expand inner Enums
+        CompilationUnit supportCU = new CompilationUnit();
         for (String k : this.fields.keySet()) {
             AbstractJSONSchema2Pojo prop = this.fields.get(k);
+//            boolean required = this.required.contains(k);
 
-            GeneratorResult gr = prop.generateJava(cu);
+            GeneratorResult gr = prop.generateJava(supportCU);
 
             // For now the inner types are only for enums
             if (gr.getInnerClasses().size() > 0) {
               for (String enumName: gr.getInnerClasses()) {
-                if (cu.getEnumByName(enumName).isPresent() &&
-                  !clz.getMembers().contains(cu.getEnumByName(enumName).get())) {
-
-                  clz.addMember(cu.getEnumByName(enumName).get());
-
-                  // removing this enum from the top level compilation unit
-                  cu.remove(cu.getEnumByName(enumName).get());
-                }
+                clz.addMember(supportCU.getEnumByName(enumName).get());
               }
             }
 
+            gr = prop.generateJava(cu);
             buffer.addAll(gr.getTopLevelClasses());
 
             String originalFieldName = k;
@@ -204,6 +216,11 @@ public class JObject extends AbstractJSONSchema2Pojo {
                             new SingleMemberAnnotationExpr(
                                     new Name("com.fasterxml.jackson.annotation.JsonProperty"),
                                     new StringLiteralExpr(originalFieldName)));
+
+//                    if (required) {
+//                      objField.addAnnotation("javax.validation.constraints.NotNull");
+//                    }
+
                     objField.createGetter();
                     objField.createSetter();
                 } catch (Exception cause) {
