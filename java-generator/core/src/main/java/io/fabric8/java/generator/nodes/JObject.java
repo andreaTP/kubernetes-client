@@ -175,6 +175,7 @@ public class JObject extends AbstractJSONSchema2Pojo {
             AbstractJSONSchema2Pojo prop = this.fields.get(k);
             buffer.addAll(prop.generateJava(cu));
 
+            String originalFieldName = k;
             String fieldName = AbstractJSONSchema2Pojo.sanitizeString(k);
             String fieldType = AbstractJSONSchema2Pojo.sanitizeString(prop.getType());
 
@@ -185,7 +186,7 @@ public class JObject extends AbstractJSONSchema2Pojo {
                     objField.addAnnotation(
                             new SingleMemberAnnotationExpr(
                                     new Name("com.fasterxml.jackson.annotation.JsonProperty"),
-                                    new StringLiteralExpr(fieldName)));
+                                    new StringLiteralExpr(originalFieldName)));
                     objField.createGetter();
                     objField.createSetter();
                 } catch (Exception cause) {

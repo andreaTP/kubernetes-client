@@ -15,9 +15,8 @@
  */
 package io.fabric8.java.generator.nodes;
 
-public enum JavaType {
-    PRIMITIVE,
-    OBJECT,
-    ARRAY,
-    MAP
+public class JMapNameAndType extends JavaNameAndType {
+    public JMapNameAndType(String name) {
+        super(name, JavaType.MAP);
+    }
 }

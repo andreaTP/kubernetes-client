@@ -218,13 +218,13 @@ public class KeycloakStatus implements io.fabric8.kubernetes.api.model.Kubernete
     }
 
     @com.fasterxml.jackson.annotation.JsonProperty("secondaryResources")
-    private java.util.List<String> secondaryResources;
+    private java.util.Map<java.lang.String, java.util.List<String>> secondaryResources;
 
-    public java.util.List<String> getSecondaryResources() {
+    public java.util.Map<java.lang.String, java.util.List<String>> getSecondaryResources() {
         return secondaryResources;
     }
 
-    public void setSecondaryResources(java.util.List<String> secondaryResources) {
+    public void setSecondaryResources(java.util.Map<java.lang.String, java.util.List<String>> secondaryResources) {
         this.secondaryResources = secondaryResources;
     }
 

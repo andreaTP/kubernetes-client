@@ -108,11 +108,9 @@ public abstract class AbstractJSONSchema2Pojo {
                     return fromJsonSchema(
                             key, new JPrimitiveNameAndType("String"), prop, prefix, suffix);
                 case "object":
-                    // Taking the schema defined in AdditionalProperties instead
                     if (prop.getAdditionalProperties() != null
                             && prop.getAdditionalProperties().getSchema() != null) {
-                        return fromJsonSchema(
-                                key, prop.getAdditionalProperties().getSchema(), prefix, suffix);
+                        return fromJsonSchema(key, new JMapNameAndType(key), prop, prefix, suffix);
                     } else {
                         return fromJsonSchema(
                                 key, new JObjectNameAndType(key), prop, prefix, suffix);
@@ -132,20 +130,18 @@ public abstract class AbstractJSONSchema2Pojo {
                 return new JPrimitive(nt.getName());
             case ARRAY:
                 return new JArray(fromJsonSchema(key, prop.getItems().getSchema(), prefix, suffix));
+            case MAP:
+                return new JMap(
+                        fromJsonSchema(
+                                key, prop.getAdditionalProperties().getSchema(), prefix, suffix));
             case OBJECT:
-                if (prop.getAdditionalProperties() != null &&
-                    prop.getAdditionalProperties().getSchema() != null) {
-                    return new JMap(
-                            fromJsonSchema(key, prop.getAdditionalProperties().getSchema(), prefix, suffix));
-                } else {
-                    boolean preserveUnknownFields =
-                            (prop.getXKubernetesPreserveUnknownFields() != null
-                                    && prop.getXKubernetesPreserveUnknownFields());
-                    return new JObject(
-                            key,
-                            prop.getProperties(),
-                            new JObjectOptions(preserveUnknownFields, prefix, suffix));
-                }
+                boolean preserveUnknownFields =
+                        (prop.getXKubernetesPreserveUnknownFields() != null
+                                && prop.getXKubernetesPreserveUnknownFields());
+                return new JObject(
+                        key,
+                        prop.getProperties(),
+                        new JObjectOptions(preserveUnknownFields, prefix, suffix));
             default:
                 throw new RuntimeException("unreachable " + nt.getType());
         }
