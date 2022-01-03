@@ -20,13 +20,15 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 public class JArray extends AbstractJSONSchema2Pojo {
 
+    private static final String JAVA_UTIL_LIST = "java.util.List";
+
     private String type = null;
     private AbstractJSONSchema2Pojo nested = null;
 
     public JArray(AbstractJSONSchema2Pojo nested) {
         this.type =
                 new ClassOrInterfaceType()
-                        .setName("java.util.List")
+                        .setName(JAVA_UTIL_LIST)
                         .setTypeArguments(
                                 new ClassOrInterfaceType()
                                         .setName(

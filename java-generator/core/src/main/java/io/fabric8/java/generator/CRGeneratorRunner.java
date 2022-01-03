@@ -22,10 +22,12 @@ import io.fabric8.java.generator.nodes.JCRObject;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinitionSpec;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinitionVersion;
+import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class CRGeneratorRunner {
 
@@ -45,48 +47,45 @@ public class CRGeneratorRunner {
     }
 
     public List<WritableCRCompilationUnit> generate(
-            CustomResourceDefinition crd, Optional<String> basePackageName) {
+            CustomResourceDefinition crd, String basePackageName) {
         CustomResourceDefinitionSpec crSpec = crd.getSpec();
         String crName = crSpec.getNames().getKind();
         String group = crSpec.getGroup();
 
-        List<WritableCRCompilationUnit> writableCUs =
-                new ArrayList<WritableCRCompilationUnit>(crSpec.getVersions().size());
+        List<WritableCRCompilationUnit> writableCUs = new ArrayList<>(crSpec.getVersions().size());
         for (CustomResourceDefinitionVersion crdv : crSpec.getVersions()) {
             CompilationUnit cu = new CompilationUnit();
 
             String version = crdv.getName();
 
-            String pkg = basePackageName.map((p) -> p + "." + version).orElse(version);
+            String pkg =
+                    Optional.ofNullable(basePackageName)
+                            .map(p -> p + "." + version)
+                            .orElse(version);
 
             cu.setPackageDeclaration(pkg);
 
             AbstractJSONSchema2Pojo specGenerator = null;
 
-            if (crdv.getSchema().getOpenAPIV3Schema().getProperties().get("spec") != null) {
-                specGenerator =
-                        AbstractJSONSchema2Pojo.fromJsonSchema(
-                                "spec",
-                                crdv.getSchema().getOpenAPIV3Schema().getProperties().get("spec"),
-                                crName,
-                                "");
+            JSONSchemaProps spec =
+                    crdv.getSchema().getOpenAPIV3Schema().getProperties().get("spec");
+            if (spec != null) {
+                specGenerator = AbstractJSONSchema2Pojo.fromJsonSchema("spec", spec, crName, "");
             }
 
             AbstractJSONSchema2Pojo statusGenerator = null;
-            if (crdv.getSchema().getOpenAPIV3Schema().getProperties().get("status") != null) {
+            JSONSchemaProps status =
+                    crdv.getSchema().getOpenAPIV3Schema().getProperties().get("status");
+            if (status != null) {
                 statusGenerator =
-                        AbstractJSONSchema2Pojo.fromJsonSchema(
-                                "status",
-                                crdv.getSchema().getOpenAPIV3Schema().getProperties().get("status"),
-                                crName,
-                                "");
+                        AbstractJSONSchema2Pojo.fromJsonSchema("status", status, crName, "");
             }
 
             AbstractJSONSchema2Pojo crGenerator =
                     new JCRObject(
                             crName, version, group, specGenerator != null, statusGenerator != null);
 
-            List<String> classNames = new ArrayList<String>();
+            List<String> classNames = new ArrayList<>();
 
             classNames.addAll(
                     validateAndAggregate(cu, crGenerator, specGenerator, statusGenerator));
@@ -97,11 +96,12 @@ public class CRGeneratorRunner {
         return writableCUs;
     }
 
-    private List<String> validateAndAggregate(CompilationUnit cu, AbstractJSONSchema2Pojo... grs) {
+    private List<String> validateAndAggregate(
+            CompilationUnit cu, AbstractJSONSchema2Pojo... generators) {
         List<String> finalResult = new ArrayList<>();
-        for (AbstractJSONSchema2Pojo gr : grs) {
-            if (gr != null) {
-                GeneratorResult res = gr.generateJava(cu);
+        for (AbstractJSONSchema2Pojo generator : generators) {
+            if (generator != null) {
+                GeneratorResult res = generator.generateJava(cu);
                 validateTopLevel(res);
                 finalResult.addAll(res.getTopLevelClasses());
             }
@@ -109,29 +109,18 @@ public class CRGeneratorRunner {
         return finalResult;
     }
 
-    private void validateTopLevel(GeneratorResult gr) {
-        if (gr.getInnerClasses().size() > 0) {
+    private void validateTopLevel(GeneratorResult generatorResult) {
+        if (!generatorResult.getInnerClasses().isEmpty()) {
             throw new RuntimeException(
-                    "Unmatched inner class spilled up to top level " + gr.getInnerClasses().get(0));
+                    "Unmatched inner class spilled up to top level "
+                            + generatorResult.getInnerClasses().get(0));
         }
     }
 
-    private Optional<String> getPackage(String group) {
-        if (group == null) {
-            return Optional.empty();
-        }
+    protected String getPackage(String group) {
+        final List<String> groupElements = Arrays.asList(group.replace('-', '_').split("\\."));
 
-        Stack<String> stack = new Stack<String>();
-        for (String s : group.split("\\.")) {
-            stack.push(s);
-        }
-        StringBuilder packageName = new StringBuilder();
-        packageName.append(stack.pop());
-        while (!stack.empty()) {
-            packageName.append(".");
-            packageName.append(stack.pop().replace("-", "_"));
-        }
-
-        return Optional.of(packageName.toString());
+        Collections.reverse(groupElements);
+        return groupElements.stream().collect(Collectors.joining("."));
     }
 }

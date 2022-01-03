@@ -19,8 +19,20 @@ import static io.fabric8.java.generator.nodes.Keywords.JAVA_KEYWORDS;
 
 import com.github.javaparser.ast.CompilationUnit;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
+import java.util.function.Function;
 
 public abstract class AbstractJSONSchema2Pojo {
+
+    static final String BOOLEAN_CRD_TYPE = "boolean";
+    static final String INTEGER_CRD_TYPE = "integer";
+    static final String INT32_CRD_TYPE = "int32";
+    static final String INT64_CRD_TYPE = "int64";
+    static final String NUMBER_CRD_TYPE = "number";
+    static final String FLOAT_CRD_TYPE = "float";
+    static final String DOUBLE_CRD_TYPE = "double";
+    static final String STRING_CRD_TYPE = "string";
+    static final String OBJECT_CRD_TYPE = "object";
+    static final String ARRAY_CRD_TYPE = "array";
 
     public abstract String getType();
 
@@ -28,7 +40,7 @@ public abstract class AbstractJSONSchema2Pojo {
 
     public static String sanitizeString(String str) {
         String sanitized = "";
-        if (JAVA_KEYWORDS.stream().filter((s) -> s.equals(str)).findFirst().isPresent()) {
+        if (JAVA_KEYWORDS.stream().anyMatch(s -> s.equals(str))) {
             sanitized = "_" + str;
         } else {
             sanitized = str;
@@ -53,71 +65,57 @@ public abstract class AbstractJSONSchema2Pojo {
 
     public static AbstractJSONSchema2Pojo fromJsonSchema(
             String key, JSONSchemaProps prop, String prefix, String suffix) {
-        if (prop.getXKubernetesIntOrString() != null && prop.getXKubernetesIntOrString()) {
-            return fromJsonSchema(
-                    key,
-                    new JPrimitiveNameAndType("io.fabric8.kubernetes.api.model.IntOrString"),
-                    prop,
-                    prefix,
-                    suffix);
-        } else if (prop.getType() == null
-                && prop.getXKubernetesPreserveUnknownFields() != null
-                && prop.getXKubernetesPreserveUnknownFields()) {
-            return fromJsonSchema(key, new JObjectNameAndType(key), prop, prefix, suffix);
+        Function<JavaNameAndType, AbstractJSONSchema2Pojo> fromJsonSchema =
+                javaNameAndType -> fromJsonSchema(key, javaNameAndType, prop, prefix, suffix);
+        String type = prop.getType();
+        if (Boolean.TRUE.equals(prop.getXKubernetesIntOrString())) {
+            return fromJsonSchema.apply(JPrimitiveNameAndType.INT_OR_STRING);
+        } else if (type == null
+                && Boolean.TRUE.equals(prop.getXKubernetesPreserveUnknownFields())) {
+            return fromJsonSchema.apply(new JObjectNameAndType(key));
         } else if (prop.getEnum() != null && prop.getEnum().size() > 0) {
-            return fromJsonSchema(key, new JEnumNameAndType(key), prop, prefix, suffix);
+            return fromJsonSchema.apply(new JEnumNameAndType(key));
         } else {
-            if (prop.getType() == null) {
-                throw new RuntimeException("Type for key:" + key + " is null");
+            if (type == null) {
+                throw new IllegalArgumentException("Type for key:" + key + " is null");
             }
 
-            switch (prop.getType()) {
-                case "boolean":
-                    return fromJsonSchema(
-                            key, new JPrimitiveNameAndType("Boolean"), prop, prefix, suffix);
-                case "integer":
+            switch (type) {
+                case BOOLEAN_CRD_TYPE:
+                    return fromJsonSchema.apply(JPrimitiveNameAndType.BOOL);
+                case INTEGER_CRD_TYPE:
                     String intFormat = prop.getFormat();
-                    if (intFormat == null) intFormat = "int64";
+                    if (intFormat == null) intFormat = INT64_CRD_TYPE;
 
                     switch (intFormat) {
-                        case "int32":
-                            return fromJsonSchema(
-                                    key,
-                                    new JPrimitiveNameAndType("Integer"),
-                                    prop,
-                                    prefix,
-                                    suffix);
-                        case "int64":
+                        case INT32_CRD_TYPE:
+                            return fromJsonSchema.apply(JPrimitiveNameAndType.INTEGER);
+                        case INT64_CRD_TYPE:
                         default:
-                            return fromJsonSchema(
-                                    key, new JPrimitiveNameAndType("Long"), prop, prefix, suffix);
+                            return fromJsonSchema.apply(JPrimitiveNameAndType.LONG);
                     }
-                case "number":
+                case NUMBER_CRD_TYPE:
                     String numberFormat = prop.getFormat();
-                    if (numberFormat == null) numberFormat = "double";
+                    if (numberFormat == null) numberFormat = DOUBLE_CRD_TYPE;
 
                     switch (numberFormat) {
-                        case "float":
-                            return fromJsonSchema(
-                                    key, new JPrimitiveNameAndType("Float"), prop, prefix, suffix);
-                        case "double":
+                        case FLOAT_CRD_TYPE:
+                            return fromJsonSchema.apply(JPrimitiveNameAndType.FLOAT);
+                        case DOUBLE_CRD_TYPE:
                         default:
-                            return fromJsonSchema(
-                                    key, new JPrimitiveNameAndType("Double"), prop, prefix, suffix);
+                            return fromJsonSchema.apply(JPrimitiveNameAndType.DOUBLE);
                     }
-                case "string":
-                    return fromJsonSchema(
-                            key, new JPrimitiveNameAndType("String"), prop, prefix, suffix);
-                case "object":
+                case STRING_CRD_TYPE:
+                    return fromJsonSchema.apply(JPrimitiveNameAndType.STRING);
+                case OBJECT_CRD_TYPE:
                     if (prop.getAdditionalProperties() != null
                             && prop.getAdditionalProperties().getSchema() != null) {
-                        return fromJsonSchema(key, new JMapNameAndType(key), prop, prefix, suffix);
+                        return fromJsonSchema.apply(new JMapNameAndType(key));
                     } else {
-                        return fromJsonSchema(
-                                key, new JObjectNameAndType(key), prop, prefix, suffix);
+                        return fromJsonSchema.apply(new JObjectNameAndType(key));
                     }
-                case "array":
-                    return fromJsonSchema(key, new JArrayNameAndType(key), prop, prefix, suffix);
+                case ARRAY_CRD_TYPE:
+                    return fromJsonSchema.apply(new JArrayNameAndType(key));
                 default:
                     throw new RuntimeException("unmanaged type " + prop.getType());
             }
@@ -137,8 +135,7 @@ public abstract class AbstractJSONSchema2Pojo {
                                 key, prop.getAdditionalProperties().getSchema(), prefix, suffix));
             case OBJECT:
                 boolean preserveUnknownFields =
-                        (prop.getXKubernetesPreserveUnknownFields() != null
-                                && prop.getXKubernetesPreserveUnknownFields());
+                        Boolean.TRUE.equals(prop.getXKubernetesPreserveUnknownFields());
                 return new JObject(
                         key,
                         prop.getProperties(),

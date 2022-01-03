@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import io.fabric8.java.generator.nodes.AbstractJSONSchema2Pojo;
 import org.junit.jupiter.api.Test;
 
-public class StringSanitizationTest {
+class StringSanitizationTest {
 
     @Test
     void shouldRemoveDashes() {

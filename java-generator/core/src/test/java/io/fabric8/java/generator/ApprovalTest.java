@@ -23,11 +23,10 @@ import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import org.approvaltests.Approvals;
 import org.junit.jupiter.api.Test;
 
-public class ApprovalTest {
+class ApprovalTest {
 
     KubernetesClient client = new DefaultKubernetesClient();
     CRGeneratorRunner runner = new CRGeneratorRunner();
@@ -46,7 +45,8 @@ public class ApprovalTest {
         CustomResourceDefinition crd = getCRD("crontab-crd.yml");
 
         // Act
-        List<WritableCRCompilationUnit> writables = runner.generate(crd, Optional.empty());
+        List<WritableCRCompilationUnit> writables =
+                runner.generate(crd, runner.getPackage("test.org"));
 
         // Assert
         assertEquals(1, writables.size());
@@ -68,7 +68,8 @@ public class ApprovalTest {
         CustomResourceDefinition crd = getCRD("keycloak-crd.yml");
 
         // Act
-        List<WritableCRCompilationUnit> writables = runner.generate(crd, Optional.empty());
+        List<WritableCRCompilationUnit> writables =
+                runner.generate(crd, runner.getPackage("test.org"));
 
         // Assert
         assertEquals(1, writables.size());
@@ -90,7 +91,8 @@ public class ApprovalTest {
         CustomResourceDefinition crd = getCRD("jokerequests-crd.yml");
 
         // Act
-        List<WritableCRCompilationUnit> writables = runner.generate(crd, Optional.empty());
+        List<WritableCRCompilationUnit> writables =
+                runner.generate(crd, runner.getPackage("test.org"));
 
         // Assert
         assertEquals(1, writables.size());

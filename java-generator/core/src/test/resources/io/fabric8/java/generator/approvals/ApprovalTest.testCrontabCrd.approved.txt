@@ -1,10 +1,10 @@
-CrontabJavaCr[0] = package v1;
+CrontabJavaCr[0] = package org.test.v1;
 
 @io.fabric8.kubernetes.model.annotation.Version("stable.example.com")
 @io.fabric8.kubernetes.model.annotation.Group("v1")
 public class CronTab extends io.fabric8.kubernetes.client.CustomResource<CronTabSpec, CronTabStatus> implements io.fabric8.kubernetes.api.model.Namespaced {
 }
-CrontabJavaCr[1] = package v1;
+CrontabJavaCr[1] = package org.test.v1;
 
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
 @com.fasterxml.jackson.annotation.JsonPropertyOrder({"cronSpec","image","replicas"})
@@ -61,7 +61,7 @@ public class CronTabSpec implements io.fabric8.kubernetes.api.model.KubernetesRe
         this.replicas = replicas;
     }
 }
-CrontabJavaCr[2] = package v1;
+CrontabJavaCr[2] = package org.test.v1;
 
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
 @com.fasterxml.jackson.annotation.JsonPropertyOrder({"labelSelector","replicas"})

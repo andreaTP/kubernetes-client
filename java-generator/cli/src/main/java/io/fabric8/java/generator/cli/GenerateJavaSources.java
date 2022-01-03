@@ -22,7 +22,7 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 @Command(
-        name = "GenerateJavaSources",
+        name = "java-gen",
         mixinStandardHelpOptions = true,
         helpCommand = true,
         versionProvider = KubernetesClientVersionProvider.class)

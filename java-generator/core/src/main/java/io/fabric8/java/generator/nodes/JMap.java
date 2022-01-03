@@ -21,15 +21,18 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 public class JMap extends AbstractJSONSchema2Pojo {
 
+    private static final String JAVA_LANG_STRING = "java.lang.String";
+    private static final String JAVA_UTIL_MAP = "java.util.Map";
+
     private String type = null;
     private AbstractJSONSchema2Pojo nested = null;
 
     public JMap(AbstractJSONSchema2Pojo nested) {
         this.type =
                 new ClassOrInterfaceType()
-                        .setName("java.util.Map")
+                        .setName(JAVA_UTIL_MAP)
                         .setTypeArguments(
-                                new ClassOrInterfaceType().setName("java.lang.String"),
+                                new ClassOrInterfaceType().setName(JAVA_LANG_STRING),
                                 new ClassOrInterfaceType()
                                         .setName(
                                                 AbstractJSONSchema2Pojo.sanitizeString(

@@ -22,7 +22,7 @@ public class JPrimitive extends AbstractJSONSchema2Pojo {
     private String type;
 
     private static final GeneratorResult empty =
-            new GeneratorResult(new ArrayList<String>(), new ArrayList<>());
+            new GeneratorResult(new ArrayList<>(), new ArrayList<>());
 
     public JPrimitive(String type) {
         this.type = type;

@@ -66,7 +66,7 @@ public class JCRObject extends AbstractJSONSchema2Pojo {
         }
 
         ClassOrInterfaceType status = new ClassOrInterfaceType().setName(this.type + "Status");
-        if (!withSpec) {
+        if (!withStatus) {
             status = new ClassOrInterfaceType().setName("java.lang.Void");
         }
 

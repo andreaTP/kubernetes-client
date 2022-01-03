@@ -28,9 +28,21 @@ import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
 import java.util.*;
 import org.junit.jupiter.api.Test;
 
-public class GeneratorTest {
+class GeneratorTest {
 
     static final JObjectOptions dummyOptions = new JObjectOptions(false, "", "");
+
+    @Test
+    void testCorrectInterpolationOfPackage() {
+        // Arrange
+        CRGeneratorRunner runner = new CRGeneratorRunner();
+
+        // Act
+        String packageName = runner.getPackage("test.org");
+
+        // Assert
+        assertEquals("org.test", packageName);
+    }
 
     @Test
     void testCR() {

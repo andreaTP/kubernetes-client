@@ -19,6 +19,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.*;
@@ -30,6 +31,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JObject extends AbstractJSONSchema2Pojo {
+
+    private static final String JAVA_UTIL_MAP = "java.util.Map";
+    private static final String ADDITIONAL_PROPERTIES = "additionalProperties";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JObject.class);
     private static final Set<String> IGNORED_FIELDS = new HashSet<>();
@@ -160,19 +164,19 @@ public class JObject extends AbstractJSONSchema2Pojo {
         clz.addImplementedType("io.fabric8.kubernetes.api.model.KubernetesResource");
 
         if (this.options.isPreserveUnknownFields()) {
-            if (!clz.getFieldByName("additionalProperties").isPresent()) {
+            if (!clz.getFieldByName(ADDITIONAL_PROPERTIES).isPresent()) {
                 ClassOrInterfaceType mapType =
                         new ClassOrInterfaceType()
-                                .setName("java.util.Map")
+                                .setName(JAVA_UTIL_MAP)
                                 .setTypeArguments(
                                         new ClassOrInterfaceType().setName("String"),
                                         new ClassOrInterfaceType().setName("Object"));
                 FieldDeclaration objField =
-                        clz.addField(mapType, "additionalProperties", Modifier.Keyword.PRIVATE);
+                        clz.addField(mapType, ADDITIONAL_PROPERTIES, Modifier.Keyword.PRIVATE);
                 objField.setVariables(
                         new NodeList<>(
                                 new VariableDeclarator()
-                                        .setName("additionalProperties")
+                                        .setName(ADDITIONAL_PROPERTIES)
                                         .setType(mapType)
                                         .setInitializer(
                                                 "new java.util.HashMap<String, Object>()")));
@@ -188,20 +192,23 @@ public class JObject extends AbstractJSONSchema2Pojo {
             }
         }
 
-        List<String> buffer = new ArrayList<String>(this.fields.size() + 1);
+        List<String> buffer = new ArrayList<>(this.fields.size() + 1);
 
         // CU to expand inner Enums
         CompilationUnit supportCU = new CompilationUnit();
         for (String k : this.fields.keySet()) {
             AbstractJSONSchema2Pojo prop = this.fields.get(k);
-            boolean required = this.required.contains(k);
+            boolean isRequired = this.required.contains(k);
 
             GeneratorResult gr = prop.generateJava(supportCU);
 
             // For now the inner types are only for enums
-            if (gr.getInnerClasses().size() > 0) {
+            if (!gr.getInnerClasses().isEmpty()) {
                 for (String enumName : gr.getInnerClasses()) {
-                    clz.addMember(supportCU.getEnumByName(enumName).get());
+                    Optional<EnumDeclaration> ed = supportCU.getEnumByName(enumName);
+                    if (ed.isPresent()) {
+                        clz.addMember(ed.get());
+                    }
                 }
             }
 
@@ -221,7 +228,7 @@ public class JObject extends AbstractJSONSchema2Pojo {
                                     new Name("com.fasterxml.jackson.annotation.JsonProperty"),
                                     new StringLiteralExpr(originalFieldName)));
 
-                    if (required) {
+                    if (isRequired) {
                         objField.addAnnotation("javax.validation.constraints.NotNull");
                     }
 

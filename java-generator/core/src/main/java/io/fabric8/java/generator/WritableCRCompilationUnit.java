@@ -39,8 +39,7 @@ public class WritableCRCompilationUnit {
         try {
             File finalPath =
                     createFolders(
-                            cu.getPackageDeclaration().map((p) -> p.getName().asString()),
-                            basePath);
+                            cu.getPackageDeclaration().map(p -> p.getName().asString()), basePath);
             for (String cn : this.classNames) writeJavaClass(finalPath, cn);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -52,8 +51,8 @@ public class WritableCRCompilationUnit {
         assert (clazz.isPresent());
 
         StringBuilder content = new StringBuilder();
-        cu.getPackageDeclaration().ifPresent((p) -> content.append(p));
-        content.append(clazz.get().toString());
+        cu.getPackageDeclaration().ifPresent(content::append);
+        content.append(clazz.get());
 
         return content.toString();
     }
@@ -61,7 +60,7 @@ public class WritableCRCompilationUnit {
     private void writeJavaClass(File basePath, String name) throws IOException {
         String content = getJavaClass(name);
 
-        writeToFile(basePath.toPath().resolve(name + ".java").toFile(), content.toString());
+        writeToFile(basePath.toPath().resolve(name + ".java").toFile(), content);
     }
 
     private void writeToFile(File file, String str) throws IOException {

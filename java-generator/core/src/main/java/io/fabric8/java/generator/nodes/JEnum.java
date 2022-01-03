@@ -26,6 +26,9 @@ import java.util.List;
 
 public class JEnum extends AbstractJSONSchema2Pojo {
 
+    private static final String JAVA_LANG_STRING = "java.lang.String";
+    private static final String VALUE = "value";
+
     private String type = null;
     // TODO: handle number enum
     private List<String> values;
@@ -67,17 +70,17 @@ public class JEnum extends AbstractJSONSchema2Pojo {
                 }
             } else {
                 // TODO: test this properly eventually
-                en.addField("java.lang.String", "value");
+                en.addField(JAVA_LANG_STRING, VALUE);
                 ConstructorDeclaration cd = en.addConstructor();
-                cd.addParameter("java.lang.String", "value");
+                cd.addParameter(JAVA_LANG_STRING, VALUE);
                 cd.createBody();
 
                 cd.setBody(
                         new BlockStmt()
                                 .addStatement(
                                         new AssignExpr(
-                                                new NameExpr("this.value"),
-                                                new NameExpr("value"),
+                                                new NameExpr("this." + VALUE),
+                                                new NameExpr(VALUE),
                                                 AssignExpr.Operator.ASSIGN)));
 
                 for (String k : this.values) {

@@ -20,7 +20,7 @@ import java.util.List;
 
 public class Keywords {
 
-    public static final List<String> JAVA_KEYWORDS = new ArrayList<String>();
+    protected static final List<String> JAVA_KEYWORDS = new ArrayList<>();
 
     static {
         JAVA_KEYWORDS.add("abstract");

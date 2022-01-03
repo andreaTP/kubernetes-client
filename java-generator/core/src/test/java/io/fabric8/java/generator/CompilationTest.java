@@ -35,7 +35,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class CompilationTest {
+class CompilationTest {
 
     private static TemporaryFolder tmpFolder = TemporaryFolder.builder().assureDeletion().build();
 

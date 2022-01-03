@@ -1,10 +1,10 @@
-KeycloakJavaCr[0] = package v1alpha1;
+KeycloakJavaCr[0] = package org.test.v1alpha1;
 
 @io.fabric8.kubernetes.model.annotation.Version("keycloak.org")
 @io.fabric8.kubernetes.model.annotation.Group("v1alpha1")
 public class Keycloak extends io.fabric8.kubernetes.client.CustomResource<KeycloakSpec, KeycloakStatus> implements io.fabric8.kubernetes.api.model.Namespaced {
 }
-KeycloakJavaCr[1] = package v1alpha1;
+KeycloakJavaCr[1] = package org.test.v1alpha1;
 
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
 @com.fasterxml.jackson.annotation.JsonPropertyOrder({"extensions","external","externalAccess","externalDatabase","instances","keycloakDeploymentSpec","migration","multiAvailablityZones","podDisruptionBudget","postgresDeploymentSpec","profile","storageClassName","unmanaged"})
@@ -171,7 +171,7 @@ public class KeycloakSpec implements io.fabric8.kubernetes.api.model.KubernetesR
         this.postgresDeploymentSpec = postgresDeploymentSpec;
     }
 }
-KeycloakJavaCr[2] = package v1alpha1;
+KeycloakJavaCr[2] = package org.test.v1alpha1;
 
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
 @com.fasterxml.jackson.annotation.JsonPropertyOrder({"credentialSecret","externalURL","internalURL","message","phase","ready","secondaryResources","version"})
