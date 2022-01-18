@@ -19,6 +19,8 @@ import static io.fabric8.java.generator.nodes.Keywords.JAVA_KEYWORDS;
 
 import com.github.javaparser.ast.CompilationUnit;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 
 public abstract class AbstractJSONSchema2Pojo {
@@ -37,6 +39,26 @@ public abstract class AbstractJSONSchema2Pojo {
     public abstract String getType();
 
     public abstract GeneratorResult generateJava(CompilationUnit cu);
+
+    private static Set<String> allObjectTypes = new TreeSet<>();
+
+    public static void resetGlobalStatus() {
+        allObjectTypes.clear();
+    }
+
+    public static String disambiguateTypeName(String name) {
+        String finalTypeName = disambiguateTypeName(name, name, 0);
+        allObjectTypes.add(finalTypeName);
+        return finalTypeName;
+    }
+
+    private static String disambiguateTypeName(String base, String name, int num) {
+        if (allObjectTypes.contains(name)) {
+            return disambiguateTypeName(base, base + num, num + 1);
+        } else {
+            return name;
+        }
+    }
 
     public static String sanitizeString(String str) {
         String sanitized = "";

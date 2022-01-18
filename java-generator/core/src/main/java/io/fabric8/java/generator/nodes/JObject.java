@@ -70,11 +70,12 @@ public class JObject extends AbstractJSONSchema2Pojo {
         }
 
         this.type =
-                AbstractJSONSchema2Pojo.sanitizeString(
-                        options.getPrefix()
-                                + type.substring(0, 1).toUpperCase()
-                                + type.substring(1)
-                                + options.getSuffix());
+                AbstractJSONSchema2Pojo.disambiguateTypeName(
+                        AbstractJSONSchema2Pojo.sanitizeString(
+                                options.getPrefix()
+                                        + type.substring(0, 1).toUpperCase()
+                                        + type.substring(1)
+                                        + options.getSuffix()));
 
         if (fields == null) {
             // no fields
@@ -99,11 +100,7 @@ public class JObject extends AbstractJSONSchema2Pojo {
         ClassOrInterfaceDeclaration clz = cu.getClassByName(this.type).orElse(null);
 
         if (clz != null) {
-            // TODO: investigate a more nested structure for the generated code
-            LOGGER.warn(
-                    "A class named {} have been already processed, if this class have multiple implementations the resulting code might be incorrect",
-                    this.type);
-            return new GeneratorResult();
+            throw new RuntimeException("Found duplicated class " + clz);
         }
 
         clz = cu.addClass(this.type);

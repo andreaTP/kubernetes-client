@@ -64,6 +64,7 @@ public class CRGeneratorRunner {
                             .orElse(version);
 
             cu.setPackageDeclaration(pkg);
+            AbstractJSONSchema2Pojo.resetGlobalStatus();
 
             AbstractJSONSchema2Pojo specGenerator = null;
 
