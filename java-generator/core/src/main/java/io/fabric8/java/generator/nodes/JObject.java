@@ -47,6 +47,7 @@ public class JObject extends AbstractJSONSchema2Pojo {
 
     private String type = null;
     private Map<String, AbstractJSONSchema2Pojo> fields = new HashMap<>();
+    private Map<String, String> descriptions = new HashMap<>();
     private Set<String> required = new HashSet<>();
     private JObjectOptions options;
 
@@ -81,11 +82,17 @@ public class JObject extends AbstractJSONSchema2Pojo {
             // no fields
         } else {
             for (Map.Entry<String, JSONSchemaProps> field : fields.entrySet()) {
-                if (!IGNORED_FIELDS.contains(field.getKey()))
+                String key = field.getKey();
+                JSONSchemaProps value = field.getValue();
+
+                if (value.getDescription() != null) {
+                    this.descriptions.put(key, value.getDescription().replace("\"", "\\\""));
+                }
+                if (!IGNORED_FIELDS.contains(key))
                     this.fields.put(
                             field.getKey(),
                             AbstractJSONSchema2Pojo.fromJsonSchema(
-                                    field.getKey(), field.getValue(), nextPrefix, nextSuffix));
+                                    field.getKey(), value, nextPrefix, nextSuffix));
             }
         }
     }
@@ -196,6 +203,7 @@ public class JObject extends AbstractJSONSchema2Pojo {
         for (String k : this.fields.keySet()) {
             AbstractJSONSchema2Pojo prop = this.fields.get(k);
             boolean isRequired = this.required.contains(k);
+            boolean hasDescription = this.descriptions.containsKey(k);
 
             GeneratorResult gr = prop.generateJava(supportCU);
 
@@ -216,28 +224,34 @@ public class JObject extends AbstractJSONSchema2Pojo {
             String fieldName = AbstractJSONSchema2Pojo.sanitizeString(k);
             String fieldType = AbstractJSONSchema2Pojo.sanitizeString(prop.getType());
 
-            if (!clz.getFieldByName(fieldName).isPresent()) {
-                try {
-                    FieldDeclaration objField =
-                            clz.addField(fieldType, fieldName, Modifier.Keyword.PRIVATE);
+            assert (!clz.getFieldByName(fieldName).isPresent());
+
+            try {
+                FieldDeclaration objField =
+                        clz.addField(fieldType, fieldName, Modifier.Keyword.PRIVATE);
+                objField.addAnnotation(
+                        new SingleMemberAnnotationExpr(
+                                new Name("com.fasterxml.jackson.annotation.JsonProperty"),
+                                new StringLiteralExpr(originalFieldName)));
+
+                if (isRequired) {
+                    objField.addAnnotation("javax.validation.constraints.NotNull");
+                }
+
+                if (hasDescription) {
                     objField.addAnnotation(
                             new SingleMemberAnnotationExpr(
-                                    new Name("com.fasterxml.jackson.annotation.JsonProperty"),
-                                    new StringLiteralExpr(originalFieldName)));
-
-                    if (isRequired) {
-                        objField.addAnnotation("javax.validation.constraints.NotNull");
-                    }
-
-                    objField.createGetter();
-                    objField.createSetter();
-                } catch (Exception cause) {
-                    throw new RuntimeException(
-                            "Error generating field " + fieldName + " with type " + prop.getType(),
-                            cause);
+                                    new Name(
+                                            "com.fasterxml.jackson.annotation.JsonPropertyDescription"),
+                                    new StringLiteralExpr(this.descriptions.get(k))));
                 }
-            } else {
-                // Warning ???
+
+                objField.createGetter();
+                objField.createSetter();
+            } catch (Exception cause) {
+                throw new RuntimeException(
+                        "Error generating field " + fieldName + " with type " + prop.getType(),
+                        cause);
             }
         }
         buffer.add(this.type);
