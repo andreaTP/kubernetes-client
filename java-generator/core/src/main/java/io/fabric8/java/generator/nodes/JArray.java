@@ -35,6 +35,7 @@ public class JArray extends AbstractJSONSchema2Pojo {
                                                 AbstractJSONSchema2Pojo.sanitizeString(
                                                         nested.getType())))
                         .toString();
+
         this.nested = nested;
     }
 

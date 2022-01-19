@@ -84,7 +84,7 @@ public class CRGeneratorRunner {
 
             AbstractJSONSchema2Pojo crGenerator =
                     new JCRObject(
-                            crName, version, group, specGenerator != null, statusGenerator != null);
+                            crName, group, version, specGenerator != null, statusGenerator != null);
 
             List<String> classNames = new ArrayList<>();
 
