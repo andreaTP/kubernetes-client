@@ -200,7 +200,8 @@ public class JObject extends AbstractJSONSchema2Pojo {
 
         // CU to expand inner Enums
         CompilationUnit supportCU = new CompilationUnit();
-        for (String k : this.fields.keySet()) {
+        List<String> sortedKeys = this.fields.keySet().stream().sorted().collect(Collectors.toList());
+        for (String k : sortedKeys) {
             AbstractJSONSchema2Pojo prop = this.fields.get(k);
             boolean isRequired = this.required.contains(k);
             boolean hasDescription = this.descriptions.containsKey(k);
