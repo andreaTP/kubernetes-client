@@ -15,6 +15,9 @@
  */
 package io.fabric8.java.generator.nodes;
 
+import static io.fabric8.java.generator.nodes.Keywords.ADDITIONAL_PROPERTIES;
+import static io.fabric8.java.generator.nodes.Keywords.JAVA_UTIL_MAP;
+
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
@@ -24,6 +27,7 @@ import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
+import io.fabric8.java.generator.exceptions.JavaGeneratorException;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -31,9 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JObject extends AbstractJSONSchema2Pojo {
-
-    private static final String JAVA_UTIL_MAP = "java.util.Map";
-    private static final String ADDITIONAL_PROPERTIES = "additionalProperties";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JObject.class);
     private static final Set<String> IGNORED_FIELDS = new HashSet<>();
@@ -45,9 +46,9 @@ public class JObject extends AbstractJSONSchema2Pojo {
         IGNORED_FIELDS.add("examples");
     }
 
-    private String type = null;
-    private Map<String, AbstractJSONSchema2Pojo> fields = new HashMap<>();
-    private Set<String> required = new HashSet<>();
+    private final String type;
+    private final Map<String, AbstractJSONSchema2Pojo> fields;
+    private final Set<String> required;
     private JObjectOptions options;
 
     public JObject(
@@ -56,6 +57,8 @@ public class JObject extends AbstractJSONSchema2Pojo {
             List<String> required,
             JObjectOptions options) {
         this.options = options;
+        this.required = new HashSet<>();
+        this.fields = new HashMap<>();
 
         if (required != null) {
             this.required.addAll(required);
@@ -101,7 +104,7 @@ public class JObject extends AbstractJSONSchema2Pojo {
         if (clz != null) {
             // TODO: investigate a more nested structure for the generated code
             LOGGER.warn(
-                    "A class named {} have been already processed, if this class have multiple implementations the resulting code might be incorrect",
+                    "A class named {} has been already processed, if this class have multiple implementations the resulting code might be incorrect",
                     this.type);
             return new GeneratorResult();
         }
@@ -235,7 +238,7 @@ public class JObject extends AbstractJSONSchema2Pojo {
                     objField.createGetter();
                     objField.createSetter();
                 } catch (Exception cause) {
-                    throw new RuntimeException(
+                    throw new JavaGeneratorException(
                             "Error generating field " + fieldName + " with type " + prop.getType(),
                             cause);
                 }

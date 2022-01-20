@@ -27,7 +27,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>java-generator-cli</artifactId>
-  <name>Fabric8 :: Java generator :: Cli</name>
+  <name>Fabric8 :: Java generator :: CLI</name>
 
   <properties>
     <picocli.version>4.6.2</picocli.version>

@@ -15,6 +15,8 @@
  */
 package io.fabric8.java.generator.nodes;
 
+import static io.fabric8.java.generator.nodes.Keywords.JAVA_LANG_STRING;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.*;
@@ -26,12 +28,11 @@ import java.util.List;
 
 public class JEnum extends AbstractJSONSchema2Pojo {
 
-    private static final String JAVA_LANG_STRING = "java.lang.String";
     private static final String VALUE = "value";
 
-    private String type = null;
+    private final String type;
     // TODO: handle number enum
-    private List<String> values;
+    private final List<String> values;
 
     public JEnum(String type, List<JsonNode> values) {
         this.type =
@@ -61,6 +62,7 @@ public class JEnum extends AbstractJSONSchema2Pojo {
                     Integer.valueOf(k);
                     degraded = true;
                 } catch (Exception e) {
+                    // Ignored
                 }
             }
 
@@ -89,6 +91,7 @@ public class JEnum extends AbstractJSONSchema2Pojo {
                         Integer.valueOf(k);
                         constantName = "V_" + constantName;
                     } catch (Exception e) {
+                        // Ignored
                     }
                     en.addEnumConstant(constantName + "(\"" + k + "\")");
                 }

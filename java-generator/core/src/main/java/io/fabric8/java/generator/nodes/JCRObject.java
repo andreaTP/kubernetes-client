@@ -26,11 +26,11 @@ import java.util.List;
 
 public class JCRObject extends AbstractJSONSchema2Pojo {
 
-    private String type;
-    private String group;
-    private String version;
-    private boolean withSpec;
-    private boolean withStatus;
+    private final String type;
+    private final String group;
+    private final String version;
+    private final boolean withSpec;
+    private final boolean withStatus;
 
     public JCRObject(
             String type, String group, String version, boolean withSpec, boolean withStatus) {

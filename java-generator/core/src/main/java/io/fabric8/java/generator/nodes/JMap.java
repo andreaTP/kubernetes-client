@@ -16,16 +16,16 @@
 /* (C)2015 */
 package io.fabric8.java.generator.nodes;
 
+import static io.fabric8.java.generator.nodes.Keywords.JAVA_LANG_STRING;
+import static io.fabric8.java.generator.nodes.Keywords.JAVA_UTIL_MAP;
+
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 public class JMap extends AbstractJSONSchema2Pojo {
 
-    private static final String JAVA_LANG_STRING = "java.lang.String";
-    private static final String JAVA_UTIL_MAP = "java.util.Map";
-
-    private String type = null;
-    private AbstractJSONSchema2Pojo nested = null;
+    private final String type;
+    private final AbstractJSONSchema2Pojo nested;
 
     public JMap(AbstractJSONSchema2Pojo nested) {
         this.type =

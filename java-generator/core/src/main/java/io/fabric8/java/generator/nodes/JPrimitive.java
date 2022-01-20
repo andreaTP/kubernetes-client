@@ -19,7 +19,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import java.util.ArrayList;
 
 public class JPrimitive extends AbstractJSONSchema2Pojo {
-    private String type;
+    private final String type;
 
     private static final GeneratorResult empty =
             new GeneratorResult(new ArrayList<>(), new ArrayList<>());

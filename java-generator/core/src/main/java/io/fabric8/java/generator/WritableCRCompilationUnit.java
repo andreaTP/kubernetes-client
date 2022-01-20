@@ -17,6 +17,7 @@ package io.fabric8.java.generator;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import io.fabric8.java.generator.exceptions.JavaGeneratorException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -27,8 +28,8 @@ import java.util.Optional;
 
 public class WritableCRCompilationUnit {
 
-    private CompilationUnit cu;
-    private List<String> classNames;
+    private final CompilationUnit cu;
+    private final List<String> classNames;
 
     WritableCRCompilationUnit(CompilationUnit cu, List<String> classNames) {
         this.cu = cu;
@@ -42,11 +43,11 @@ public class WritableCRCompilationUnit {
                             cu.getPackageDeclaration().map(p -> p.getName().asString()), basePath);
             for (String cn : this.classNames) writeJavaClass(finalPath, cn);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new JavaGeneratorException(e);
         }
     }
 
-    String getJavaClass(String name) {
+    protected String getJavaClass(String name) {
         Optional<ClassOrInterfaceDeclaration> clazz = cu.getClassByName(name);
         assert (clazz.isPresent());
 

@@ -1,7 +1,7 @@
 JokeRequestJavaCr[0] = package org.test.v1alpha1;
 
-@io.fabric8.kubernetes.model.annotation.Version("samples.javaoperatorsdk.io")
-@io.fabric8.kubernetes.model.annotation.Group("v1alpha1")
+@io.fabric8.kubernetes.model.annotation.Version("v1alpha1")
+@io.fabric8.kubernetes.model.annotation.Group("samples.javaoperatorsdk.io")
 public class JokeRequest extends io.fabric8.kubernetes.client.CustomResource<JokeRequestSpec, JokeRequestStatus> implements io.fabric8.kubernetes.api.model.Namespaced {
 }
 JokeRequestJavaCr[1] = package org.test.v1alpha1;

@@ -13,23 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.fabric8.java.generator.nodes;
+package io.fabric8.java.generator.exceptions;
 
-public class JavaNameAndType {
+public class JavaGeneratorException extends RuntimeException {
+    public JavaGeneratorException() {}
 
-    public JavaType getType() {
-        return type;
+    public JavaGeneratorException(String message) {
+        super(message);
     }
 
-    public String getName() {
-        return name;
+    public JavaGeneratorException(String message, Throwable cause) {
+        super(message, cause);
     }
 
-    private final JavaType type;
-    private final String name;
-
-    public JavaNameAndType(String name, JavaType type) {
-        this.name = name;
-        this.type = type;
+    public JavaGeneratorException(Throwable cause) {
+        super(cause);
     }
 }

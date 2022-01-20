@@ -74,4 +74,9 @@ public class Keywords {
         JAVA_KEYWORDS.add("super");
         JAVA_KEYWORDS.add("while");
     }
+
+    static final String JAVA_UTIL_MAP = "java.util.Map";
+    static final String JAVA_UTIL_LIST = "java.util.List";
+    static final String JAVA_LANG_STRING = "java.lang.String";
+    static final String ADDITIONAL_PROPERTIES = "additionalProperties";
 }

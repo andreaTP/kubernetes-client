@@ -15,15 +15,15 @@
  */
 package io.fabric8.java.generator.nodes;
 
+import static io.fabric8.java.generator.nodes.Keywords.JAVA_UTIL_LIST;
+
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 public class JArray extends AbstractJSONSchema2Pojo {
 
-    private static final String JAVA_UTIL_LIST = "java.util.List";
-
-    private String type = null;
-    private AbstractJSONSchema2Pojo nested = null;
+    private final String type;
+    private final AbstractJSONSchema2Pojo nested;
 
     public JArray(AbstractJSONSchema2Pojo nested) {
         this.type =

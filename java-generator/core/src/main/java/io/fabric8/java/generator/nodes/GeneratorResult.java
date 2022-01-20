@@ -20,13 +20,13 @@ import java.util.List;
 
 public class GeneratorResult {
 
-    private List<String> topLevelClasses;
+    private final List<String> topLevelClasses;
 
     public List<String> getInnerClasses() {
         return innerClasses;
     }
 
-    private List<String> innerClasses;
+    private final List<String> innerClasses;
 
     public List<String> getTopLevelClasses() {
         return topLevelClasses;

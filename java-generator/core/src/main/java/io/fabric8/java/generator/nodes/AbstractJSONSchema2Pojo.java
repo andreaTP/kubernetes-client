@@ -18,6 +18,7 @@ package io.fabric8.java.generator.nodes;
 import static io.fabric8.java.generator.nodes.Keywords.JAVA_KEYWORDS;
 
 import com.github.javaparser.ast.CompilationUnit;
+import io.fabric8.java.generator.exceptions.JavaGeneratorException;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
 import java.util.function.Function;
 
@@ -38,6 +39,7 @@ public abstract class AbstractJSONSchema2Pojo {
 
     public abstract GeneratorResult generateJava(CompilationUnit cu);
 
+    /** Takes a random string and manipulate it to be a valid Java identifier */
     public static String sanitizeString(String str) {
         String sanitized = "";
         if (JAVA_KEYWORDS.stream().anyMatch(s -> s.equals(str))) {
@@ -117,7 +119,7 @@ public abstract class AbstractJSONSchema2Pojo {
                 case ARRAY_CRD_TYPE:
                     return fromJsonSchema.apply(new JArrayNameAndType(key));
                 default:
-                    throw new RuntimeException("unmanaged type " + prop.getType());
+                    throw new JavaGeneratorException("Unmanaged type " + prop.getType());
             }
         }
     }
@@ -144,7 +146,7 @@ public abstract class AbstractJSONSchema2Pojo {
             case ENUM:
                 return new JEnum(key, prop.getEnum());
             default:
-                throw new RuntimeException("unreachable " + nt.getType());
+                throw new JavaGeneratorException("Unreachable " + nt.getType());
         }
     }
 }

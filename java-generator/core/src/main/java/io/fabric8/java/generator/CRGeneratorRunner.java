@@ -16,6 +16,7 @@
 package io.fabric8.java.generator;
 
 import com.github.javaparser.ast.CompilationUnit;
+import io.fabric8.java.generator.exceptions.JavaGeneratorException;
 import io.fabric8.java.generator.nodes.AbstractJSONSchema2Pojo;
 import io.fabric8.java.generator.nodes.GeneratorResult;
 import io.fabric8.java.generator.nodes.JCRObject;
@@ -83,7 +84,7 @@ public class CRGeneratorRunner {
 
             AbstractJSONSchema2Pojo crGenerator =
                     new JCRObject(
-                            crName, version, group, specGenerator != null, statusGenerator != null);
+                            crName, group, version, specGenerator != null, statusGenerator != null);
 
             List<String> classNames = new ArrayList<>();
 
@@ -111,7 +112,7 @@ public class CRGeneratorRunner {
 
     private void validateTopLevel(GeneratorResult generatorResult) {
         if (!generatorResult.getInnerClasses().isEmpty()) {
-            throw new RuntimeException(
+            throw new JavaGeneratorException(
                     "Unmatched inner class spilled up to top level "
                             + generatorResult.getInnerClasses().get(0));
         }
