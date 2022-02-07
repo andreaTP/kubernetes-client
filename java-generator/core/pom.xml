@@ -100,6 +100,12 @@
       <groupId>com.approvaltests</groupId>
       <artifactId>approvaltests</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.maven.shared</groupId>
+      <artifactId>maven-invoker</artifactId>
+      <version>3.1.0</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

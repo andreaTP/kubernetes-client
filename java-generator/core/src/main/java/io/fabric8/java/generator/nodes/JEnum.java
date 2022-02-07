@@ -20,8 +20,7 @@ import static io.fabric8.java.generator.nodes.Keywords.JAVA_LANG_STRING;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.*;
-import com.github.javaparser.ast.expr.AssignExpr;
-import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,59 +47,45 @@ public class JEnum extends AbstractJSONSchema2Pojo {
         return this.type;
     }
 
-    private String sanitizeEnumEntry(String str) {
-        str = str.replace(" ", "_");
-        str = str.replace("/", "_");
-        return str;
+    private static String sanitizeEnumEntry(final String str) {
+        return str.replaceAll("[\\s/]", "_");
     }
 
     @Override
     public GeneratorResult generateJava(CompilationUnit cu) {
-        EnumDeclaration en = cu.getEnumByName(this.type).orElse(null);
+        EnumDeclaration en = cu.addEnum(this.type);
 
-        if (en == null) {
-            en = cu.addEnum(this.type);
+        en.addField(JAVA_LANG_STRING, VALUE);
+        ConstructorDeclaration cd = en.addConstructor();
+        cd.addParameter(JAVA_LANG_STRING, VALUE);
+        cd.createBody();
 
-            boolean degraded = false;
-            for (String k : this.values) {
-                try {
-                    Integer.valueOf(k);
-                    degraded = true;
-                } catch (Exception e) {
-                    // Ignored
-                }
+        cd.setBody(
+                new BlockStmt()
+                        .addStatement(
+                                new AssignExpr(
+                                        new NameExpr("this." + VALUE),
+                                        new NameExpr(VALUE),
+                                        AssignExpr.Operator.ASSIGN)));
+
+        for (String k : this.values) {
+            String constantName;
+            try {
+                // If the value can be parsed as an Integer
+                Integer.valueOf(k);
+                // Prepend
+                constantName = "V_" + sanitizeEnumEntry(sanitizeString(k));
+            } catch (Exception e) {
+                constantName = sanitizeEnumEntry(sanitizeString(k));
             }
-
-            if (!degraded) {
-                for (String k : this.values) {
-                    en.addEnumConstant(sanitizeEnumEntry(sanitizeString(k)));
-                }
-            } else {
-                // TODO: test this properly eventually
-                en.addField(JAVA_LANG_STRING, VALUE);
-                ConstructorDeclaration cd = en.addConstructor();
-                cd.addParameter(JAVA_LANG_STRING, VALUE);
-                cd.createBody();
-
-                cd.setBody(
-                        new BlockStmt()
-                                .addStatement(
-                                        new AssignExpr(
-                                                new NameExpr("this." + VALUE),
-                                                new NameExpr(VALUE),
-                                                AssignExpr.Operator.ASSIGN)));
-
-                for (String k : this.values) {
-                    String constantName = sanitizeEnumEntry(sanitizeString(k));
-                    try {
-                        Integer.valueOf(k);
-                        constantName = "V_" + constantName;
-                    } catch (Exception e) {
-                        // Ignored
-                    }
-                    en.addEnumConstant(constantName + "(\"" + k + "\")");
-                }
-            }
+            EnumConstantDeclaration decl = new EnumConstantDeclaration();
+            decl.addAnnotation(
+                    new SingleMemberAnnotationExpr(
+                            new Name("com.fasterxml.jackson.annotation.JsonProperty"),
+                            new StringLiteralExpr(k)));
+            decl.setName(constantName);
+            decl.addArgument(new StringLiteralExpr(k));
+            en.addEntry(decl);
         }
 
         return new GeneratorResult(new ArrayList<>(), Collections.singletonList(getType()));
