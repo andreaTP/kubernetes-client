@@ -285,14 +285,15 @@ class GeneratorTest {
         GeneratorResult res = obj.generateJava(cu);
 
         // Assert
-        assertEquals(6, res.getTopLevelClasses().size());
+        assertEquals(4, res.getTopLevelClasses().size());
         // The order here is not important
         assertEquals("O1", res.getTopLevelClasses().get(0));
-        assertEquals("O10", res.getTopLevelClasses().get(1));
-        assertEquals("O20", res.getTopLevelClasses().get(2));
-        assertEquals("O3", res.getTopLevelClasses().get(3));
-        assertEquals("O2", res.getTopLevelClasses().get(4));
-        assertEquals("T", res.getTopLevelClasses().get(5));
+        assertEquals("O3", res.getTopLevelClasses().get(1));
+        assertEquals("O2", res.getTopLevelClasses().get(2));
+        assertEquals("T", res.getTopLevelClasses().get(3));
+
+//      assertEquals("O10", res.getTopLevelClasses().get(1));
+//      assertEquals("O20", res.getTopLevelClasses().get(2));
 
         Optional<ClassOrInterfaceDeclaration> clzT = cu.getClassByName("T");
         assertTrue(clzT.isPresent());

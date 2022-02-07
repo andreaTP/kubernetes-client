@@ -107,7 +107,7 @@ class CompilationTest {
 
         // Assert
         assertTrue(compilation.errors().isEmpty());
-        assertEquals(28, compilation.sourceFiles().size());
+        assertEquals(27, compilation.sourceFiles().size());
         assertEquals(Compilation.Status.SUCCESS, compilation.status());
     }
 
@@ -139,7 +139,7 @@ class CompilationTest {
 
         // Assert
         assertTrue(compilation.errors().isEmpty());
-        assertEquals(358, compilation.sourceFiles().size());
+        assertEquals(99, compilation.sourceFiles().size());
         assertEquals(Compilation.Status.SUCCESS, compilation.status());
     }
 

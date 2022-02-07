@@ -74,18 +74,13 @@ public abstract class AbstractJSONSchema2Pojo {
         classNames.clear();
     }
 
-    public static String uniqueClassName(String name) {
-        String finalTypeName = uniqueClassName(name, name, 0);
-        classNames.add(finalTypeName);
-        return finalTypeName;
-    }
-
-    private static String uniqueClassName(String base, String name, int num) {
-        if (classNames.contains(name)) {
-            return uniqueClassName(base, base + num, num + 1);
-        } else {
-            return name;
-        }
+    public static boolean isUniqueClassName(String name) {
+      if (classNames.contains(name)) {
+        return false;
+      } else {
+        classNames.add(name);
+        return true;
+      }
     }
 
     public static AbstractJSONSchema2Pojo fromJsonSchema(

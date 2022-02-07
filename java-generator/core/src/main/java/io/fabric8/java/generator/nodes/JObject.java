@@ -45,6 +45,7 @@ public class JObject extends AbstractJSONSchema2Pojo {
     }
 
     private final String type;
+    private final boolean embed;
     private final Map<String, AbstractJSONSchema2Pojo> fields;
     private final Set<String> required;
     private JObjectOptions options;
@@ -67,13 +68,13 @@ public class JObject extends AbstractJSONSchema2Pojo {
             nextSuffix = "Spec";
         }
 
-        this.type =
-                AbstractJSONSchema2Pojo.uniqueClassName(
-                        AbstractJSONSchema2Pojo.sanitizeString(
+        this.type = AbstractJSONSchema2Pojo.sanitizeString(
                                 options.getPrefix()
                                         + type.substring(0, 1).toUpperCase()
                                         + type.substring(1)
-                                        + options.getSuffix()));
+                                        + options.getSuffix());
+
+        this.embed = !AbstractJSONSchema2Pojo.isUniqueClassName(this.type);
 
         if (fields == null) {
             // no fields
@@ -136,20 +137,23 @@ public class JObject extends AbstractJSONSchema2Pojo {
                         new Name("lombok.experimental.Accessors"),
                         new NameExpr("prefix = {\n" + "    \"_\",\n" + "    \"\"\n" + "}")));
 
-        clz.addAnnotation(
-                new SingleMemberAnnotationExpr(
-                        new Name("io.sundr.builder.annotations.Buildable"),
-                        new NameExpr(
-                                "editableEnabled = false, validationEnabled = false, generateBuilderPackage = false, builderPackage = \"io.fabric8.kubernetes.api.builder\", refs = {\n"
-                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.ObjectMeta.class),\n"
-                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.ObjectReference.class),\n"
-                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.LabelSelector.class),\n"
-                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.Container.class),\n"
-                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.EnvVar.class),\n"
-                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.ContainerPort.class),\n"
-                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.Volume.class),\n"
-                                        + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.VolumeMount.class)\n"
-                                        + "}")));
+        // Disable the Builder interface if it's an inner class
+        if (!this.embed) {
+          clz.addAnnotation(
+            new SingleMemberAnnotationExpr(
+              new Name("io.sundr.builder.annotations.Buildable"),
+              new NameExpr(
+                "editableEnabled = false, validationEnabled = false, generateBuilderPackage = false, builderPackage = \"io.fabric8.kubernetes.api.builder\", refs = {\n"
+                  + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.ObjectMeta.class),\n"
+                  + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.ObjectReference.class),\n"
+                  + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.LabelSelector.class),\n"
+                  + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.Container.class),\n"
+                  + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.EnvVar.class),\n"
+                  + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.ContainerPort.class),\n"
+                  + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.Volume.class),\n"
+                  + "    @io.sundr.builder.annotations.BuildableReference(io.fabric8.kubernetes.api.model.VolumeMount.class)\n"
+                  + "}")));
+        }
 
         clz.addImplementedType("io.fabric8.kubernetes.api.model.KubernetesResource");
     }
@@ -187,7 +191,7 @@ public class JObject extends AbstractJSONSchema2Pojo {
 
         List<String> buffer = new ArrayList<>(this.fields.size() + 1);
 
-        // CU to expand inner Enums
+        // CU to expand inner classes
         CompilationUnit supportCU = new CompilationUnit();
         List<String> sortedKeys =
                 this.fields.keySet().stream().sorted().collect(Collectors.toList());
@@ -197,9 +201,10 @@ public class JObject extends AbstractJSONSchema2Pojo {
 
             GeneratorResult gr = prop.generateJava(supportCU);
 
-            // For now the inner types are only for enums
-            for (String enumName : gr.getInnerClasses()) {
-                supportCU.getEnumByName(enumName).ifPresent(ed -> clz.addMember(ed));
+            // Inner types are for enums and classes
+            for (String ic : gr.getInnerClasses()) {
+                supportCU.getEnumByName(ic).ifPresent(ed -> clz.addMember(ed));
+                supportCU.getClassByName(ic).ifPresent(cd -> clz.addMember(cd));
             }
 
             gr = prop.generateJava(cu);
@@ -234,8 +239,12 @@ public class JObject extends AbstractJSONSchema2Pojo {
                         cause);
             }
         }
-        buffer.add(this.type);
 
-        return new GeneratorResult(buffer);
+        if (this.embed) {
+          return new GeneratorResult(buffer, Collections.singletonList(getType()));
+        } else {
+          buffer.add(this.type);
+          return new GeneratorResult(buffer);
+        }
     }
 }
