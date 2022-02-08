@@ -17,9 +17,9 @@ package io.fabric8.java.generator.nodes;
 
 import static io.fabric8.java.generator.nodes.Keywords.JAVA_KEYWORDS;
 
-import com.github.javaparser.ast.CompilationUnit;
 import io.fabric8.java.generator.exceptions.JavaGeneratorException;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
+import java.util.Locale;
 import java.util.function.Function;
 
 public abstract class AbstractJSONSchema2Pojo {
@@ -37,7 +37,12 @@ public abstract class AbstractJSONSchema2Pojo {
 
     public abstract String getType();
 
-    public abstract GeneratorResult generateJava(CompilationUnit cu);
+    public abstract GeneratorResult generateJava();
+
+    /** Takes a string and return the corresponding package name */
+    public static String packageName(String str) {
+        return str.toLowerCase(Locale.ROOT);
+    }
 
     /** Takes a random string and manipulate it to be a valid Java identifier */
     public static String sanitizeString(String str) {
@@ -67,9 +72,9 @@ public abstract class AbstractJSONSchema2Pojo {
     }
 
     public static AbstractJSONSchema2Pojo fromJsonSchema(
-            String key, JSONSchemaProps prop, String prefix, String suffix) {
+            String key, JSONSchemaProps prop, String parentPkg, String prefix) {
         Function<JavaNameAndType, AbstractJSONSchema2Pojo> fromJsonSchema =
-                javaNameAndType -> fromJsonSchema(key, javaNameAndType, prop, prefix, suffix);
+                javaNameAndType -> fromJsonSchema(key, javaNameAndType, prop, parentPkg, prefix);
         String type = prop.getType();
         if (Boolean.TRUE.equals(prop.getXKubernetesIntOrString())) {
             return fromJsonSchema.apply(JPrimitiveNameAndType.INT_OR_STRING);
@@ -126,24 +131,30 @@ public abstract class AbstractJSONSchema2Pojo {
     }
 
     private static AbstractJSONSchema2Pojo fromJsonSchema(
-            String key, JavaNameAndType nt, JSONSchemaProps prop, String prefix, String suffix) {
+            String key, JavaNameAndType nt, JSONSchemaProps prop, String parentPkg, String prefix) {
         switch (nt.getType()) {
             case PRIMITIVE:
                 return new JPrimitive(nt.getName());
             case ARRAY:
-                return new JArray(fromJsonSchema(key, prop.getItems().getSchema(), prefix, suffix));
+                return new JArray(
+                        fromJsonSchema(key, prop.getItems().getSchema(), parentPkg, prefix));
             case MAP:
                 return new JMap(
                         fromJsonSchema(
-                                key, prop.getAdditionalProperties().getSchema(), prefix, suffix));
+                                key,
+                                prop.getAdditionalProperties().getSchema(),
+                                parentPkg,
+                                prefix));
             case OBJECT:
                 boolean preserveUnknownFields =
                         Boolean.TRUE.equals(prop.getXKubernetesPreserveUnknownFields());
                 return new JObject(
+                        parentPkg,
                         key,
                         prop.getProperties(),
                         prop.getRequired(),
-                        new JObjectOptions(preserveUnknownFields, prefix, suffix));
+                        preserveUnknownFields,
+                        prefix);
             case ENUM:
                 return new JEnum(key, prop.getEnum());
             default:

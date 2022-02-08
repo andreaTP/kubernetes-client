@@ -17,7 +17,6 @@ package io.fabric8.java.generator.nodes;
 
 import static io.fabric8.java.generator.nodes.Keywords.JAVA_UTIL_LIST;
 
-import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 public class JArray extends AbstractJSONSchema2Pojo {
@@ -40,7 +39,7 @@ public class JArray extends AbstractJSONSchema2Pojo {
     }
 
     @Override
-    public GeneratorResult generateJava(CompilationUnit cu) {
-        return nested.generateJava(cu);
+    public GeneratorResult generateJava() {
+        return nested.generateJava();
     }
 }

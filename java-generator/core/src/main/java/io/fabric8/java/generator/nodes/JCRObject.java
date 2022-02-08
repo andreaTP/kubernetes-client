@@ -26,7 +26,9 @@ import java.util.Collections;
 
 public class JCRObject extends AbstractJSONSchema2Pojo {
 
+    private final String pkg;
     private final String type;
+    private final String className;
     private final String group;
     private final String version;
     private final boolean withSpec;
@@ -36,6 +38,7 @@ public class JCRObject extends AbstractJSONSchema2Pojo {
     private final boolean served;
 
     public JCRObject(
+            String pkg,
             String type,
             String group,
             String version,
@@ -43,7 +46,9 @@ public class JCRObject extends AbstractJSONSchema2Pojo {
             boolean withStatus,
             boolean storage,
             boolean served) {
-        this.type = type;
+        this.pkg = (pkg == null) ? "" : pkg.trim();
+        this.type = (this.pkg.isEmpty()) ? type : pkg + "." + type;
+        this.className = type;
         this.group = group;
         this.version = version;
         this.withSpec = withSpec;
@@ -58,9 +63,12 @@ public class JCRObject extends AbstractJSONSchema2Pojo {
     }
 
     @Override
-    public GeneratorResult generateJava(CompilationUnit cu) {
-        ClassOrInterfaceDeclaration clz =
-                cu.getClassByName(this.type).orElse(cu.addClass(this.type));
+    public GeneratorResult generateJava() {
+        CompilationUnit cu = new CompilationUnit();
+        if (!pkg.isEmpty()) {
+            cu.setPackageDeclaration(pkg);
+        }
+        ClassOrInterfaceDeclaration clz = cu.addClass(className);
 
         clz.addAnnotation(
                 new SingleMemberAnnotationExpr(
@@ -95,6 +103,7 @@ public class JCRObject extends AbstractJSONSchema2Pojo {
         clz.addExtendedType(crType);
         clz.addImplementedType("io.fabric8.kubernetes.api.model.Namespaced");
 
-        return new GeneratorResult(Collections.singletonList(getType()));
+        return new GeneratorResult(
+                Collections.singletonList(new GeneratorResult.ClassResult(className, cu)));
     }
 }

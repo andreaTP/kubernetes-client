@@ -2,8 +2,9 @@ JokeRequestJavaCr[0] = package org.test.v1alpha1;
 
 @io.fabric8.kubernetes.model.annotation.Version(value = "v1alpha1" , storage = true , served = true)
 @io.fabric8.kubernetes.model.annotation.Group("samples.javaoperatorsdk.io")
-public class JokeRequest extends io.fabric8.kubernetes.client.CustomResource<JokeRequestSpec, JokeRequestStatus> implements io.fabric8.kubernetes.api.model.Namespaced {
+public class JokeRequest extends io.fabric8.kubernetes.client.CustomResource<org.test.v1alpha1.JokeRequestSpec, org.test.v1alpha1.JokeRequestStatus> implements io.fabric8.kubernetes.api.model.Namespaced {
 }
+
 JokeRequestJavaCr[1] = package org.test.v1alpha1;
 
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
@@ -82,6 +83,7 @@ public class JokeRequestSpec implements io.fabric8.kubernetes.api.model.Kubernet
         this.safe = safe;
     }
 }
+
 JokeRequestJavaCr[2] = package org.test.v1alpha1;
 
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
@@ -144,3 +146,4 @@ public class JokeRequestStatus implements io.fabric8.kubernetes.api.model.Kubern
         this.state = state;
     }
 }
+

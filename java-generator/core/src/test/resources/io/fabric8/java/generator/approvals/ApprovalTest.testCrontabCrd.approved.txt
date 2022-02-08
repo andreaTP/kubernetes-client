@@ -2,8 +2,9 @@ CrontabJavaCr[0] = package org.test.v1;
 
 @io.fabric8.kubernetes.model.annotation.Version(value = "v1" , storage = true , served = true)
 @io.fabric8.kubernetes.model.annotation.Group("stable.example.com")
-public class CronTab extends io.fabric8.kubernetes.client.CustomResource<CronTabSpec, CronTabStatus> implements io.fabric8.kubernetes.api.model.Namespaced {
+public class CronTab extends io.fabric8.kubernetes.client.CustomResource<org.test.v1.CronTabSpec, org.test.v1.CronTabStatus> implements io.fabric8.kubernetes.api.model.Namespaced {
 }
+
 CrontabJavaCr[1] = package org.test.v1;
 
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
@@ -61,6 +62,7 @@ public class CronTabSpec implements io.fabric8.kubernetes.api.model.KubernetesRe
         this.replicas = replicas;
     }
 }
+
 CrontabJavaCr[2] = package org.test.v1;
 
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
@@ -107,3 +109,4 @@ public class CronTabStatus implements io.fabric8.kubernetes.api.model.Kubernetes
         this.replicas = replicas;
     }
 }
+
