@@ -19,6 +19,11 @@ import static io.fabric8.java.generator.nodes.Keywords.JAVA_UTIL_LIST;
 
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 public class JArray extends AbstractJSONSchema2Pojo {
 
     private final String type;
@@ -36,6 +41,14 @@ public class JArray extends AbstractJSONSchema2Pojo {
     @Override
     public String getType() {
         return this.type;
+    }
+
+    @Override
+    public <T> T traverse(Function<List<AbstractJSONSchema2Pojo>, T> fn) {
+      List<AbstractJSONSchema2Pojo> args = new ArrayList<>(2);
+      args.add(this);
+      args.add(nested);
+      return fn.apply(args);
     }
 
     @Override

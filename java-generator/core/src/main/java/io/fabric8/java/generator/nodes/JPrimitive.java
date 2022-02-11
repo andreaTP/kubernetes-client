@@ -16,6 +16,9 @@
 package io.fabric8.java.generator.nodes;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Function;
 
 public class JPrimitive extends AbstractJSONSchema2Pojo {
     private final String type;
@@ -30,6 +33,11 @@ public class JPrimitive extends AbstractJSONSchema2Pojo {
     @Override
     public String getType() {
         return type;
+    }
+
+    @Override
+    public <T> T traverse(Function<List<AbstractJSONSchema2Pojo>, T> fn) {
+      return fn.apply(Collections.singletonList(this));
     }
 
     @Override

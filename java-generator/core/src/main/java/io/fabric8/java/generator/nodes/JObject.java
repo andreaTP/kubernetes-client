@@ -30,6 +30,7 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import io.fabric8.java.generator.exceptions.JavaGeneratorException;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class JObject extends AbstractJSONSchema2Pojo {
@@ -89,6 +90,14 @@ public class JObject extends AbstractJSONSchema2Pojo {
     @Override
     public String getType() {
         return this.type;
+    }
+
+    @Override
+    public <T> T traverse(Function<List<AbstractJSONSchema2Pojo>, T> fn) {
+      List<AbstractJSONSchema2Pojo> args = new ArrayList<>(2);
+      args.add(this);
+      args.addAll(fields.values());
+      return fn.apply(args);
     }
 
     @Override

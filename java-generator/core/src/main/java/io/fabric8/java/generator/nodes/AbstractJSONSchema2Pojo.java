@@ -19,6 +19,8 @@ import static io.fabric8.java.generator.nodes.Keywords.JAVA_KEYWORDS;
 
 import io.fabric8.java.generator.exceptions.JavaGeneratorException;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
+
+import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
 
@@ -36,6 +38,8 @@ public abstract class AbstractJSONSchema2Pojo {
     static final String ARRAY_CRD_TYPE = "array";
 
     public abstract String getType();
+
+    public abstract <T> T traverse(Function<List<AbstractJSONSchema2Pojo>, T> fn);
 
     public abstract GeneratorResult generateJava();
 

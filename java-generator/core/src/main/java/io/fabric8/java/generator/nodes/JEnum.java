@@ -26,6 +26,8 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class JEnum extends AbstractJSONSchema2Pojo {
@@ -53,6 +55,11 @@ public class JEnum extends AbstractJSONSchema2Pojo {
         str = str.replace("/", "_");
         return str;
     }
+
+  @Override
+  public <T> T traverse(Function<List<AbstractJSONSchema2Pojo>, T> fn) {
+    return fn.apply(Collections.singletonList(this));
+  }
 
     @Override
     public GeneratorResult generateJava() {

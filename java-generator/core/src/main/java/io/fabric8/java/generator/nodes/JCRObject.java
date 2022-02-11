@@ -22,7 +22,12 @@ import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
+
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class JCRObject extends AbstractJSONSchema2Pojo {
 
@@ -61,6 +66,11 @@ public class JCRObject extends AbstractJSONSchema2Pojo {
     public String getType() {
         return this.type;
     }
+
+  @Override
+  public <T> T traverse(Function<List<AbstractJSONSchema2Pojo>, T> fn) {
+    return fn.apply(Collections.singletonList(this));
+  }
 
     @Override
     public GeneratorResult generateJava() {
