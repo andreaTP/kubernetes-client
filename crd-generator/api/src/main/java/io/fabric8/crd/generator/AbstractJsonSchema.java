@@ -28,8 +28,10 @@ import io.sundr.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.sundr.model.utils.Types.BOOLEAN_REF;
 
@@ -135,6 +137,8 @@ public abstract class AbstractJsonSchema<T, B> {
     final ClassRef originalType;
     final String fieldName;
 
+    public boolean processed;
+
     public InternalSchemaSwap(ClassRef originalType, String fieldName, ClassRef targetType) {
       this.originalType = originalType;
       this.fieldName = fieldName;
@@ -199,13 +203,50 @@ public abstract class AbstractJsonSchema<T, B> {
       );
   }
 
+  private static java.lang.reflect.Method originalTypeMethod = Arrays.stream(SchemaSwap.class.getMethods()).filter(m -> m.getName().equals("originalType")).findAny().get();
+  private static java.lang.reflect.Method fieldNameMethod = Arrays.stream(SchemaSwap.class.getMethods()).filter(m -> m.getName().equals("fieldName")).findAny().get();
+  private static java.lang.reflect.Method targetTypeMethod = Arrays.stream(SchemaSwap.class.getMethods()).filter(m -> m.getName().equals("targetType")).findAny().get();
+
+  private Stream<InternalSchemaSwap> extractSchemaSwaps(AnnotationRef annotation) {
+    Map<String, Object> params = annotation.getParameters();
+    Object[] schemaSwaps = (Object[]) params.get("value");
+    List<InternalSchemaSwap> results = new ArrayList<>(schemaSwaps.length);
+    for (int i = 0; i < schemaSwaps.length; i++) {
+//      results.add(schemaSwapFromParams((Map<String, Object>) schemaSwaps[i]));
+      if (Proxy.isProxyClass(schemaSwaps[i].getClass())) {
+        try {
+          ClassRef originalType = extractClassRef(Proxy.getInvocationHandler(schemaSwaps[i]).invoke(schemaSwaps[i], originalTypeMethod, new Object[]{}));
+          String fieldName = (String) Proxy.getInvocationHandler(schemaSwaps[i]).invoke(schemaSwaps[i], fieldNameMethod, new Object[]{});
+          ClassRef targetType = extractClassRef(Proxy.getInvocationHandler(schemaSwaps[i]).invoke(schemaSwaps[i], targetTypeMethod, new Object[]{}));
+
+          results.add(
+            new InternalSchemaSwap(
+              originalType,
+              fieldName,
+              targetType
+            ));
+        } catch (Throwable t) {
+          throw new RuntimeException(t);
+        }
+      } else if (schemaSwaps[i] instanceof AnnotationRef) {
+        results.add(extractSchemaSwap((AnnotationRef) schemaSwaps[i]));
+      } else {
+        throw new RuntimeException("WTF is going on? " + schemaSwaps[i].getClass());
+      }
+//      System.out.println(schemaSwaps[i].getClass());
+//      results.add(extractSchemaSwap((AnnotationRef) schemaSwaps[i]));
+    }
+    return results.stream();
+  }
+
   private void validateRemainingSchemaSwaps(String error, List<InternalSchemaSwap> schemaSwaps) {
-    if (!schemaSwaps.isEmpty()) {
+    if (!schemaSwaps.stream().filter(s -> !s.processed).collect(Collectors.toList()).isEmpty()) {
       String umatchedSchemaSwaps = schemaSwaps
         .stream()
+        .filter(s -> !s.processed)
         .map(InternalSchemaSwap::toString)
         .collect(Collectors.joining(",", "[", "]"));
-      throw new IllegalArgumentException("SchemaSwap annotation error " + error + ": " + umatchedSchemaSwaps);
+      // throw new IllegalArgumentException("SchemaSwap annotation error " + error + ": " + umatchedSchemaSwaps);
     }
   }
 
@@ -227,12 +268,23 @@ public abstract class AbstractJsonSchema<T, B> {
       .map(this::extractSchemaSwap)
       .collect(Collectors.toList());
 
+    newSchemaSwaps.addAll(definition
+      .getAnnotations()
+      .stream()
+      .filter(a -> a.getClassRef().getFullyQualifiedName().equals("io.fabric8.crd.generator.annotation.SchemaSwaps"))
+      .flatMap(this::extractSchemaSwaps)
+      .collect(Collectors.toList()));
+
     schemaSwaps.addAll(newSchemaSwaps);
 
     final Set<InternalSchemaSwap> currentSchemaSwaps = schemaSwaps
       .stream()
       .filter(iss -> iss.getOriginalType().getFullyQualifiedName().equals(definition.getFullyQualifiedName()))
       .collect(Collectors.toSet());
+
+    if (!currentSchemaSwaps.isEmpty()) {
+      System.out.println(definition.getFullyQualifiedName() + " processing SchemaSwaps: " + currentSchemaSwaps.size());
+    }
 
     // index potential accessors by name for faster lookup
     final Map<String, Method> accessors = indexPotentialAccessors(definition);
@@ -244,11 +296,17 @@ public abstract class AbstractJsonSchema<T, B> {
         continue;
       }
 
-      final PropertyFacade facade = new PropertyFacade(property, accessors, currentSchemaSwaps);
+      final PropertyFacade facade = new PropertyFacade(property, accessors, schemaSwaps.stream().collect(Collectors.toSet()));
       final Property possiblyRenamedProperty = facade.process();
       final Set<InternalSchemaSwap> matchedSchemaSwaps = facade.getMatchedSchemaSwaps();
-      currentSchemaSwaps.removeAll(matchedSchemaSwaps);
-      schemaSwaps.removeAll(matchedSchemaSwaps);
+      currentSchemaSwaps
+        .stream()
+        .filter(schemaSwap -> matchedSchemaSwaps.contains(schemaSwap))
+        .forEach(schemaSwap -> schemaSwap.processed = true);
+      schemaSwaps
+        .stream()
+        .filter(schemaSwap -> matchedSchemaSwaps.contains(schemaSwap))
+        .forEach(schemaSwap -> schemaSwap.processed = true);
       name = possiblyRenamedProperty.getName();
 
       if (facade.required) {
@@ -431,6 +489,8 @@ public abstract class AbstractJsonSchema<T, B> {
         .findFirst();
 
       currentSchemaSwap.ifPresent( iss -> {
+        System.out.println(name + " using SchemaSwap: " + iss.getTargetType().getFullyQualifiedName() + " original type " + iss.getOriginalType().getFullyQualifiedName());
+
         schemaFrom = iss.targetType;
         matchedSchemaSwaps.add(iss);
       });
@@ -470,6 +530,10 @@ public abstract class AbstractJsonSchema<T, B> {
           schemaFrom = p.getSchemaFrom();
         }
       });
+
+      if (schemaFrom != null) {
+        LOGGER.warn("Swapping type " + original.getTypeRef() + " to " + schemaFrom + " on field " + original.getName());
+      }
 
       TypeRef typeRef = schemaFrom != null ? schemaFrom : original.getTypeRef();
       String finalName = renamedTo != null ? renamedTo : original.getName();
@@ -615,7 +679,7 @@ public abstract class AbstractJsonSchema<T, B> {
     } else {
       String visitedName = name + ":" + def.getFullyQualifiedName();
       if (!def.getFullyQualifiedName().startsWith("java") && visited.contains(visitedName)) {
-        throw new IllegalArgumentException("Found a cyclic reference involving the field " + name + " of type " + def.getFullyQualifiedName());
+        throw new IllegalArgumentException("Found a cyclic reference involving the fields " + visited.stream().collect(Collectors.joining(", ")));
       }
       visited.add(visitedName);
     }

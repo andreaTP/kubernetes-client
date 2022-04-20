@@ -24,4 +24,6 @@ public class ExtractionSpec {
 
   private Foo bar;
 
+  private Foo bar2;
+
 }

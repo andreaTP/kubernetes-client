@@ -151,7 +151,7 @@ class JsonSchemaTest {
     assertEquals(2, properties.size());
     final JSONSchemaProps specSchema = properties.get("spec");
     Map<String, JSONSchemaProps> spec = specSchema.getProperties();
-    assertEquals(2, spec.size());
+    assertEquals(3, spec.size());
 
     // check typed SchemaFrom
     JSONSchemaProps foo = spec.get("foo");
@@ -176,6 +176,13 @@ class JsonSchemaTest {
 
     // you can exclude fields
     assertNull(barProps.get("baz"));
+
+    // check typed and repeated SchemaSwap
+    JSONSchemaProps bar2 = spec.get("bar2");
+    Map<String, JSONSchemaProps> bar2Props = bar.getProperties();
+    assertNotNull(bar2Props);
+    assertEquals("integer", bar2Props.get("BAZ").getType());
+    assertTrue(bar2.getRequired().contains("BAZ"));
   }
 
   @Test
