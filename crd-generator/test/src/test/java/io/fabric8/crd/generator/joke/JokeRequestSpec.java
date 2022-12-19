@@ -15,6 +15,8 @@
  */
 package io.fabric8.crd.generator.joke;
 
+import java.util.Properties;
+
 public class JokeRequestSpec {
   public enum Category {
     Any,
@@ -38,6 +40,7 @@ public class JokeRequestSpec {
   private Category category = Category.Any;
   private ExcludedTopic[] excluded = new ExcludedTopic[] { ExcludedTopic.nsfw, ExcludedTopic.racist, ExcludedTopic.sexist };
   private boolean safe;
+  private Properties props;
 
   public Category getCategory() {
     return category;
@@ -61,5 +64,13 @@ public class JokeRequestSpec {
 
   public void setSafe(boolean safe) {
     this.safe = safe;
+  }
+
+  public Properties getProperties() {
+    return props;
+  }
+
+  public void getProperties(Properties props) {
+    this.props = props;
   }
 }
