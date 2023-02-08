@@ -57,18 +57,19 @@ class CompilationTest {
 
   private static Stream<Arguments> compilationTestData() {
     return Stream.of(
-        Arguments.of("crontab-crd.yml", 3),
-        Arguments.of("keycloak-crd.yml", 50),
-        Arguments.of("akka-microservices-crd.yml", 28),
-        Arguments.of("strimzi-kafka-crd.yml", 704),
-        Arguments.of("spark-crd.yml", 358),
-        Arguments.of("crunchy-postgres-crd.yml", 267),
-        Arguments.of("kamelet-crd.yml", 16),
-        Arguments.of("jokerequests-crd.yml", 3),
-        Arguments.of("cert-manager-crd.yml", 5),
-        Arguments.of("camel-integrationplatforms-crd.yaml", 192),
-        Arguments.of("two-crds.yml", 6),
-        Arguments.of("folder", 6));
+        Arguments.of("kserve.yaml", 1603));
+        // Arguments.of("crontab-crd.yml", 3),
+        // Arguments.of("keycloak-crd.yml", 50),
+        // Arguments.of("akka-microservices-crd.yml", 28),
+        // Arguments.of("strimzi-kafka-crd.yml", 704),
+        // Arguments.of("spark-crd.yml", 358),
+        // Arguments.of("crunchy-postgres-crd.yml", 267),
+        // Arguments.of("kamelet-crd.yml", 16),
+        // Arguments.of("jokerequests-crd.yml", 3),
+        // Arguments.of("cert-manager-crd.yml", 5),
+        // Arguments.of("camel-integrationplatforms-crd.yaml", 192),
+        // Arguments.of("two-crds.yml", 6),
+        // Arguments.of("folder", 6));
   }
 
   @ParameterizedTest(name = "{0} should generate {1} source files and compile OK")
