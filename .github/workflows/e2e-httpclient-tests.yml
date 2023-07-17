@@ -89,7 +89,7 @@ jobs:
   chaos-tests:
     name: K8S Chaos Test
     runs-on: ubuntu-latest
-    if: github.repository == 'fabric8io/kubernetes-client'
+    # if: github.repository == 'fabric8io/kubernetes-client'
     strategy:
       fail-fast: false
       matrix:
