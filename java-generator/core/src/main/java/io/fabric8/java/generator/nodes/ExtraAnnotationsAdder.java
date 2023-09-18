@@ -20,7 +20,7 @@ import com.github.javaparser.ast.expr.Name;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 
-public interface JObjectExtraAnnotations {
+public interface ExtraAnnotationsAdder {
 
   default void addExtraAnnotations(ClassOrInterfaceDeclaration clz) {
     clz.addAnnotation("lombok.ToString");

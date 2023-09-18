@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 
 import static io.fabric8.java.generator.nodes.JPrimitiveNameAndType.DATETIME_NAME;
 
-public class JObject extends AbstractJSONSchema2Pojo implements JObjectExtraAnnotations {
+public class JObject extends AbstractJSONSchema2Pojo implements ExtraAnnotationsAdder {
 
   public static final String DEPRECATED_FIELD_MARKER = "deprecated";
   private final String type;

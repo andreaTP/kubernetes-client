@@ -27,7 +27,7 @@ import io.fabric8.java.generator.Config;
 
 import java.util.Collections;
 
-public class JCRObject extends AbstractJSONSchema2Pojo implements JObjectExtraAnnotations {
+public class JCRObject extends AbstractJSONSchema2Pojo implements ExtraAnnotationsAdder {
 
   private final String pkg;
   private final String type;
