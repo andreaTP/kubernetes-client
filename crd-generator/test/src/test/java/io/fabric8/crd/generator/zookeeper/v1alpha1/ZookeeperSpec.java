@@ -15,12 +15,16 @@
  */
 package io.fabric8.crd.generator.zookeeper.v1alpha1;
 
+import io.fabric8.generator.annotation.Max;
+import io.fabric8.generator.annotation.Required;
 import io.fabric8.kubernetes.model.annotation.SpecReplicas;
 
 public class ZookeeperSpec {
 
   @SpecReplicas
+//  @Max(1)
   private int size;
+  @Required
   private String version;
   private boolean ephemeral;
 }

@@ -24,9 +24,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ZookeeperCustomResourceTest {
 
@@ -56,7 +54,6 @@ class ZookeeperCustomResourceTest {
         .findFirst();
     assertTrue(v1.isPresent());
     v1.ifPresent(v -> {
-      //Let's check that version is marked as required
       Object spec = v.getSchema().getOpenAPIV3Schema().getProperties().get("spec");
       assertNotNull(spec);
       JSONSchemaProps props = (JSONSchemaProps) spec;
@@ -71,15 +68,14 @@ class ZookeeperCustomResourceTest {
     Optional<CustomResourceDefinitionVersion> v1alpha1 = d.getSpec().getVersions().stream()
         .filter(v -> v.getName().equals("v1alpha1")).findFirst();
     assertTrue(v1alpha1.isPresent());
-    v1.ifPresent(v -> {
-      //Let's check that version is marked as required
+    assertNotEquals(v1.get().getStorage(), v1alpha1.get().getStorage());
+    v1alpha1.ifPresent(v -> {
       Object spec = v.getSchema().getOpenAPIV3Schema().getProperties().get("spec");
       assertNotNull(spec);
       JSONSchemaProps props = (JSONSchemaProps) spec;
       List<String> required = props.getRequired();
       assertTrue(required.contains("version"));
     });
-
   }
 
   @Test
