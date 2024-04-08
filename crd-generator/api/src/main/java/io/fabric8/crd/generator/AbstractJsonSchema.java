@@ -857,11 +857,7 @@ public abstract class AbstractJsonSchema<T, B> {
       resolving = true;
     } else {
       String visitedName = name + ":" + def.getFullyQualifiedName();
-      System.out.println("DEBUGGGGG " + visitedName);
       if (visited.contains(visitedName)) {
-        for (String v: visited) {
-          System.out.println("DEBUG " + v);
-        }
         throw new IllegalArgumentException(
             "Found a cyclic reference involving the field " + name + " of type " + def.getFullyQualifiedName() + " on " + def.getFullyQualifiedName());
       }
