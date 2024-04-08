@@ -164,8 +164,8 @@
     <maven.plugin.plugin.version>3.12.0</maven.plugin.plugin.version>
     <gmavenplus-plugin.version>3.0.2</gmavenplus-plugin.version>
     <gradle-api-maven-plugin.version>0.0.5</gradle-api-maven-plugin.version>
-    <jandex.plugin.version>1.2.3</jandex.plugin.version>
-    <jandex.version>2.4.4.Final</jandex.version>
+    <jandex.plugin.version>3.1.7</jandex.plugin.version>
+    <!-- <jandex.version>2.4.4.Final</jandex.version> -->
     <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
     <jkube.version>1.16.2</jkube.version>
     <sonar-maven-plugin.version>3.11.0.3922</sonar-maven-plugin.version>
@@ -1095,7 +1095,7 @@
           <version>${maven.invoker.plugin.version}</version>
         </plugin>
         <plugin>
-          <groupId>org.jboss.jandex</groupId>
+          <groupId>io.smallrye</groupId>
           <artifactId>jandex-maven-plugin</artifactId>
           <version>${jandex.plugin.version}</version>
           <executions>
@@ -1107,13 +1107,13 @@
               <inherited>true</inherited>
             </execution>
           </executions>
-          <dependencies>
+          <!-- <dependencies>
             <dependency>
               <groupId>org.jboss</groupId>
               <artifactId>jandex</artifactId>
               <version>${jandex.version}</version>
             </dependency>
-          </dependencies>
+          </dependencies> -->
         </plugin>
         <plugin>
           <groupId>org.jacoco</groupId>
@@ -1172,7 +1172,7 @@
       </plugin>
       <!-- Create jandex index for faster performance in environments that use it -->
       <plugin>
-        <groupId>org.jboss.jandex</groupId>
+        <groupId>io.smallrye</groupId>
         <artifactId>jandex-maven-plugin</artifactId>
       </plugin>
       <plugin>
